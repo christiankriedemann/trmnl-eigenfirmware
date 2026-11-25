@@ -22,6 +22,8 @@ STATE = {
 
 
 import os
+import time
+WARTET = {}  # ssid -> (Zeitpunkt, Passwort): nach 3 s verbunden, ausser Passwort "falsch"
 if os.environ.get("NEU") == "1":
     STATE.update({"sta": "", "last": "", "wifis": [], "ort": ""})
     STATE["cfg"] = {"tz_home": "Europe/Berlin"}
@@ -52,6 +54,10 @@ class H(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b)
         elif u.path == "/api/state":
+            for ssid, (t, pw) in list(WARTET.items()):
+                if time.time() - t > 3:
+                    del WARTET[ssid]
+                    if pw != "falsch": STATE["sta"] = ssid
             self._json(STATE)
         elif u.path == "/api/scan":
             self._json([{"ssid": "Zuhause", "rssi": -48, "offen": False}, {"ssid": "Handy-Hotspot", "rssi": -63, "offen": False},
@@ -80,8 +86,9 @@ class H(BaseHTTPRequestHandler):
                 if k == "td_token": STATE["secrets"]["td_token"] = True; continue
                 STATE["cfg"][k] = v
         elif p == "/api/wifi":
-            s = json.loads(body)["ssid"]
+            d = json.loads(body); s = d["ssid"]
             if s not in STATE["wifis"]: STATE["wifis"].append(s)
+            WARTET[s] = (time.time(), d.get("pass", ""))
         elif p == "/api/wifi/forget":
             s = json.loads(body)["ssid"]
             STATE["wifis"] = [w for w in STATE["wifis"] if w != s]

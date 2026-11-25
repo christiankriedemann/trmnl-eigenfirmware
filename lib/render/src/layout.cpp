@@ -229,11 +229,16 @@ static void drawBattery(Canvas &c, const Model &m, int baseline) {
   drawText(c, inter13b, x + 25, baseline, buf);
 }
 
-static const int BANNER_H = 32;  // Hoehe des Hinweisbalkens oberhalb von safeBottom
+static const int BANNER_H = 32;  // Hoehe des Hinweisbalkens
+static const int LOW_SHIFT = 16; // Fusszeile und Balken eine Zeile unter safeBottom (Rahmen deckt dort kaum ab)
+static int bannerTop(const LayoutOptions &o) {
+  int t = o.safeBottom - BANNER_H + LOW_SHIFT;
+  return t > CANVAS_H - BANNER_H ? CANVAS_H - BANNER_H : t;
+}
 
 static void drawBanner(Canvas &c, const char *text, const LayoutOptions &o, bool show) {
   if (!show) return;
-  int top = o.safeBottom - BANNER_H;
+  int top = bannerTop(o);
   c.fillRect(0, top, CANVAS_W, CANVAS_H - top, BLACK);
   TextLine l[1];
   wrapText(inter18b, text, CANVAS_W - 32, l, 1);
@@ -244,7 +249,7 @@ static void drawBanner(Canvas &c, const char *text, const LayoutOptions &o, bool
 void renderDashboard(Canvas &c, const Model &m, const LayoutOptions &o) {
   c.clear(WHITE);
   bool banner = m.banner[0] != 0;
-  int contentBottom = banner ? o.safeBottom - BANNER_H - 6 : o.safeBottom;
+  int contentBottom = banner ? bannerTop(o) - 6 : o.safeBottom;
 
   for (int i = 0; i < 3; i++) {
     drawDayHeader(c, m.days[i], COL_X[i]);
@@ -260,8 +265,9 @@ void renderDashboard(Canvas &c, const Model &m, const LayoutOptions &o) {
   char foot[80];
   if (m.place[0]) snprintf(foot, sizeof(foot), "%s \xC2\xB7 Stand: %s", m.place, m.stand);
   else snprintf(foot, sizeof(foot), "Stand: %s", m.stand);
-  int footBase = contentBottom - 4;
-  int taskBottom = footBase - 13 - 8;
+  int footBase = o.safeBottom + LOW_SHIFT - 4;
+  if (footBase > CANVAS_H - 6) footBase = CANVAS_H - 6;
+  int taskBottom = banner ? contentBottom : footBase - 13 - 8;
   c.setClip(TASK_X, 0, RIGHT_EDGE + 4, taskBottom);
   drawTasks(c, m, taskBottom);
   c.resetClip();

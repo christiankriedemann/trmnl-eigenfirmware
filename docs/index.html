@@ -36,6 +36,16 @@ esp-web-install-button button,.knopf{font:inherit;font-weight:700;font-size:19px
 .hinweis{background:var(--weiss);border-left:4px solid var(--tinte);padding:12px 16px;margin:12px 0}
 .hinweis.rot{border-left-color:var(--schlecht)}
 ul{padding-left:20px}
+h3{font-size:19px;margin:24px 0 8px}
+ul.liste{list-style:none;padding:0;margin:0}
+ul.liste>li{position:relative;padding:6px 0 6px 36px}
+ul.liste>li::before{content:"";position:absolute;left:0;top:10px;width:20px;height:20px;border:2.5px solid var(--tinte);border-radius:4px;background:var(--weiss)}
+.info-inline{display:block;color:var(--graphit);font-size:15px;line-height:1.45}
+.dienste{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:12px 0 0}
+.dienst{background:var(--weiss);border:1px solid var(--linie);border-radius:10px;padding:14px 16px}
+.dienst>b{font-size:19px}
+.dienst p{margin:4px 0;font-size:16px;line-height:1.45}
+.dienst .braucht{border-top:1px solid var(--linie);margin-top:10px;padding-top:8px}
 details{border-top:1px solid var(--linie);padding:10px 0}
 summary{cursor:pointer;font-weight:650}
 footer{color:var(--graphit);font-size:15px;margin-top:48px;border-top:1px solid var(--linie);padding-top:16px}
@@ -49,12 +59,38 @@ a{color:var(--aktion)}
   <p class="unter">Diese Software l&auml;sst dein TRMNL-Display Termine, Aufgaben und Wetter selbst abholen. Es braucht nur ein WLAN, keinen eigenen Server und kein TRMNL-Konto. Die Installation dauert etwa zwei Minuten.</p>
   <img class="bild" src="beispiel.png" width="800" height="480" alt="Beispiel: drei Tage mit Terminen und Wetter, rechts die wichtigsten Aufgaben">
 
-  <h2>Was du brauchst</h2>
-  <ul>
-    <li>Ein <b>TRMNL OG</b> (7,5 Zoll, schwarz-wei&szlig;) mit dem Chip ESP32-C3. Die neuere Ausf&uuml;hrung mit ESP32-C5 wird noch nicht unterst&uuml;tzt, die Seite erkennt das und bricht dann ab.</li>
-    <li>Ein <b>USB-C-Kabel, das Daten &uuml;bertr&auml;gt</b>. Manche Ladekabel k&ouml;nnen nur laden, dann wird das Display nicht gefunden.</li>
-    <li>Einen Computer mit <b>Google Chrome</b> oder <b>Microsoft Edge</b> (Mac oder Windows). Safari und Firefox k&ouml;nnen das nicht.</li>
+  <h2>Bevor du anf&auml;ngst</h2>
+  <p>Leg dir diese Dinge bereit. Dann geht die Einrichtung in einem Rutsch durch und du musst nichts unterbrechen.</p>
+
+  <h3>F&uuml;r die Installation</h3>
+  <ul class="liste">
+    <li>Ein <b>TRMNL OG</b> (7,5 Zoll, schwarz-wei&szlig;) mit dem Chip ESP32-C3. <span class="info-inline">Die neuere Ausf&uuml;hrung mit ESP32-C5 wird noch nicht unterst&uuml;tzt, die Seite erkennt das und bricht dann ab.</span></li>
+    <li>Ein <b>USB-C-Kabel, das Daten &uuml;bertr&auml;gt</b>. <span class="info-inline">Manche Ladekabel k&ouml;nnen nur laden, dann wird das Display nicht gefunden.</span></li>
+    <li>Ein Computer mit <b>Google Chrome</b> oder <b>Microsoft Edge</b>, Mac oder Windows. <span class="info-inline">Safari und Firefox k&ouml;nnen das nicht.</span></li>
   </ul>
+
+  <h3>F&uuml;r die Einrichtung danach</h3>
+  <ul class="liste">
+    <li><b>WLAN-Name und Passwort.</b> <span class="info-inline">Das Display kann nur 2,4-GHz-WLAN. Die meisten Router bieten das automatisch an. Beim iPhone-Hotspot &bdquo;Kompatibilit&auml;t maximieren&ldquo; einschalten.</span></li>
+    <li><b>Ein Handy mit Kamera</b> zum Scannen des QR-Codes, oder einen Computer mit WLAN.</li>
+  </ul>
+  <p>Dazu die Zug&auml;nge f&uuml;r die Dienste, die du nutzen willst. Was du nicht nutzt, l&auml;sst du weg.</p>
+  <div class="dienste">
+    <div class="dienst"><b>Microsoft 365</b>
+      <p>Outlook-Kalender, Planner und To Do.</p>
+      <p class="braucht">Du brauchst: die <b>Anwendungs-ID</b> und die <b>Verzeichnis-ID</b> von eurer IT, dazu dein Firmenkonto.</p>
+      <p><a href="anleitung-microsoft.html">Anleitung f&uuml;r die IT</a></p></div>
+    <div class="dienst"><b>Google Workspace</b>
+      <p>Google Kalender und Google Tasks.</p>
+      <p class="braucht">Du brauchst: eine <b>Schl&uuml;sseldatei (JSON)</b> von eurer IT und deine <b>E-Mail-Adresse</b>. Die Datei l&auml;dst du am besten vom Computer aus hoch.</p>
+      <p><a href="anleitung-google.html">Anleitung f&uuml;r die IT</a></p></div>
+    <div class="dienst"><b>Todoist</b>
+      <p>Aufgaben aus Todoist.</p>
+      <p class="braucht">Du brauchst: deinen <b>API-Token</b>. Den findest du in Todoist unter Einstellungen, Integrationen, Entwickler.</p></div>
+    <div class="dienst"><b>Wetter</b>
+      <p>Kommt von selbst.</p>
+      <p class="braucht">Du brauchst: nichts. Den Ort bestimmt das Display selbst, du kannst ihn auch eintragen.</p></div>
+  </div>
 
   <h2>So geht's</h2>
   <p class="warnung"><b>Achtung:</b> Die Installation l&ouml;scht alles, was auf dem Display gespeichert ist. Danach richtest du es neu ein.</p>
@@ -82,18 +118,18 @@ a{color:var(--aktion)}
       </figure>
       <p class="info">Das Fenster kommt von Chrome und sieht je nach Computer etwas anders aus. Die anderen Eintr&auml;ge geh&ouml;ren zum Computer, sie spielen keine Rolle. Auf Windows steht dort oft &bdquo;USB-JTAG/serial debug unit (COM3)&ldquo;.</p></li>
     <li><b>Installieren best&auml;tigen</b>
-      <div class="tun">Auf <span class="markiert">Install TRMNL Eigenfirmware</span> klicken, dann noch einmal auf <span class="markiert">Install</span>.</div>
+      <div class="tun">Auf <span class="markiert">Install TRMNL Eigenfirmware</span> klicken, dann auf <span class="markiert">Next</span> und noch einmal auf <span class="markiert">Install</span>.</div>
+      <figure class="nachbau" aria-hidden="true">
+        <div class="kopf"><b>Device connected</b></div>
+        <div class="eintrag gewaehlt">&#8635;&nbsp; Install TRMNL Eigenfirmware</div>
+        <div class="eintrag">&#9638;&nbsp; Logs &amp; Console</div>
+      </figure>
+      <p class="info"><b>Nicht &bdquo;Logs &amp; Console&ldquo; w&auml;hlen.</b> Das zeigt nur Meldungen des Displays und installiert nichts. Wer dort gelandet ist: Fenster schlie&szlig;en und noch einmal auf &bdquo;Installieren&ldquo; klicken.</p>
       <p class="info">Diese Fenster sind englisch. Die Installation dauert etwa eine Minute, das Kabel bitte so lange stecken lassen. Am Ende steht &bdquo;Installation complete&ldquo;.</p></li>
     <li><b>Mit dem Handy einrichten</b>
       <div class="tun">Den QR-Code auf dem Display mit der <b>Handykamera</b> scannen und den Schritten folgen.</div>
       <p class="info">Das Handy verbindet sich dabei mit dem Display. Die Einrichtung f&uuml;hrt dich durch WLAN, Kalender und Aufgaben. Danach kannst du das Kabel abziehen.</p></li>
   </ol>
-
-  <h2>Anleitungen f&uuml;r die IT</h2>
-  <p>Damit das Display Termine und Aufgaben aus der Firma lesen darf, richtet die Person, die euer Konto verwaltet, einmal einen Zugang ein:</p>
-  <ul><li><a href="anleitung-microsoft.html"><b>Microsoft 365</b> (Outlook-Kalender, Planner, To Do)</a></li>
-    <li><a href="anleitung-google.html"><b>Google Workspace</b> (Google Kalender, Google Tasks)</a></li></ul>
-  <p class="info">F&uuml;r Todoist ist nichts vorzubereiten, den Schl&uuml;ssel tr&auml;gst du selbst in der Einrichtung ein.</p>
 
   <h2>Fragen</h2>
   <details><summary>Das Display wird nicht gefunden</summary>

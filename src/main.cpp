@@ -120,6 +120,45 @@ void portalRenderScreen(uint8_t *buf) {
 
 // ---------- Anzeige ----------
 
+// ---------- Aktualisierungsart ----------
+// Normal: Teilaktualisierung (kein Flackern). Gruendlich: nach Neustart, nach Hinweis- und
+// Einrichtungsbildschirmen, beim ersten Bild des Tages nach der Nachtruhe und nach
+// voll_alle Teilaktualisierungen (Standard 30).
+RTC_DATA_ATTR static uint16_t partialCount = 0;
+RTC_DATA_ATTR static bool fullNext = true;
+
+static void showScreenFull() {
+  display::show(true);
+  partialCount = 0;
+  fullNext = true;  // das Dashboard danach wieder gruendlich
+}
+
+static bool needFull() {
+  if (fullNext) return true;
+  if (partialCount >= constrain(cfg::getInt("voll_alle", 30), 1, 1000)) return true;
+  time_t now = time(nullptr);
+  if (now > 1700000000) {
+    struct tm lt;
+    localtime_r(&now, &lt);
+    int32_t today = tu::localDay(now);
+    if (cfg::getInt("voll_tag", 0) != today && lt.tm_hour >= constrain(cfg::getInt("wake_h", 6), 0, 23)) return true;
+  }
+  return false;
+}
+
+static void showDashboard() {
+  bool full = needFull();
+  bool partial = display::show(full);
+  if (partial) {
+    partialCount++;
+  } else {
+    partialCount = 0;
+    fullNext = false;
+    if (time(nullptr) > 1700000000) cfg::setInt("voll_tag", tu::localDay(time(nullptr)));
+  }
+  log(String(partial ? "Teilaktualisierung " : "gruendliche Aktualisierung ") + "(seit gruendlich: " + partialCount + ")");
+}
+
 static void showModel(bool force) {
   static Model probe;
   probe = model;
@@ -131,7 +170,7 @@ static void showModel(bool force) {
   }
   Canvas c(display::buffer());
   renderDashboard(c, model, layoutOptions());
-  display::show(true);
+  showDashboard();
   lastHash = h;
 }
 
@@ -145,7 +184,7 @@ static void showSetupScreen(uint32_t minutes) {
                 " Minuten.";
   Canvas c(display::buffer());
   renderQrScreen(c, qr.c_str(), "Einrichtung", body.c_str(), foot.c_str(), layoutOptions());
-  display::show(true);
+  showScreenFull();
   lastHash = 0;
 }
 
@@ -319,7 +358,7 @@ static void microsoftLogin() {
     cfg::set("last_err", err);
     Canvas c(display::buffer());
     renderMessage(c, "Microsoft-Anmeldung nicht m\xC3\xB6glich", err.c_str(), layoutOptions());
-    display::show(true);
+    showScreenFull();
     lastHash = 0;
     delay(8000);
     return;
@@ -333,7 +372,7 @@ static void microsoftLogin() {
   Canvas c(display::buffer());
   renderLoginScreen(c, dl.verificationUri.c_str(), "Microsoft anmelden", dl.userCode.c_str(), body.c_str(),
                     foot.c_str(), layoutOptions());
-  display::show(true);
+  showScreenFull();
   lastHash = 0;
   delay(1500);  // Taste loslassen lassen
   if (ms::finishLogin(dl, err, buttonPressed)) {
@@ -498,7 +537,7 @@ void setup() {
                       "Der Akku ist fast leer. Das Display aktualisiert sich erst wieder, wenn es geladen wird.\n\n"
                       "USB-C-Kabel anschlie\xC3\x9F" "en, dann geht es von selbst weiter.",
                       layoutOptions());
-        display::show(true);
+        showScreenFull();
         lastHash = 0xBA77E21;
       }
       log("Akku leer (" + String(pct) + " %), schlafe 1 h");
@@ -548,7 +587,7 @@ void setup() {
       Canvas c(display::buffer());
       renderMessage(c, "Kein WLAN",
                     "Taste auf der R\xC3\xBC" "ckseite 2 Sekunden halten, um ein WLAN einzurichten.", layoutOptions());
-      display::show(true);
+      showScreenFull();
       lastHash = 0;
     }
     sleepNow();
@@ -565,7 +604,7 @@ void setup() {
       String body = "Version " + v + " wird geladen und gepr\xC3\xBC" "ft. Das dauert etwa eine Minute.\n\n"
                     "Danach startet das Display neu und zeigt wieder Termine und Aufgaben.";
       renderMessage(c, "Update wird installiert", body.c_str(), layoutOptions());
-      display::show(true);
+      showScreenFull();
       lastHash = 0;
     });
     cfg::remove("ota_now");

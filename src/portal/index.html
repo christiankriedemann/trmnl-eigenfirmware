@@ -239,7 +239,10 @@ summary{cursor:pointer;font-weight:600;padding:8px 0}
       <div class="feld"><label for="safe_bot">Unterer Rand</label>
         <p class="erkl">Der Rahmen verdeckt unten einen Streifen. Bis zu dieser Pixelzeile (von 480) wird gezeichnet. Kleiner = mehr Abstand.</p>
         <input type="text" inputmode="numeric" id="safe_bot" style="max-width:120px"></div>
-      <button class="neben" data-speichern="q_over,q_due,q_dead,q_undat,safe_bot">Speichern</button></details>
+      <div class="feld"><label for="voll_alle">Gr&uuml;ndlich aktualisieren nach</label>
+        <p class="erkl">Normalerweise schaltet das Display nur die ge&auml;nderten Stellen um, ohne zu flackern. Nach dieser Anzahl Aktualisierungen (und einmal am Morgen) wird das ganze Bild einmal gr&uuml;ndlich aufgefrischt. Siehst du Schlieren oder Schatten alter Inhalte, stelle eine kleinere Zahl ein.</p>
+        <input type="text" inputmode="numeric" id="voll_alle" style="max-width:120px" placeholder="30"></div>
+      <button class="neben" data-speichern="q_over,q_due,q_dead,q_undat,safe_bot,voll_alle">Speichern</button></details>
   </section>
 
   <!-- Ort und Zeit -->
@@ -360,6 +363,7 @@ async function lade(){
   $('sleep_h').value=c.sleep_h||'23';$('wake_h').value=c.wake_h||'6';
   $('q_over').value=c.q_over||'4';$('q_due').value=c.q_due||'2';$('q_dead').value=c.q_dead||'2';$('q_undat').value=c.q_undat||'1';
   if(document.activeElement!==$('safe_bot'))$('safe_bot').value=c.safe_bot||'448';
+  if(document.activeElement!==$('voll_alle'))$('voll_alle').value=c.voll_alle||'';
   $('z-anzeige').textContent=`${takt==='60'?'stündlich':'alle '+takt+' Min.'}, ${sl} Aufgaben`;
   // Ort
   const mode=c.loc_mode||'auto';document.querySelectorAll('input[name=loc_mode]').forEach(i=>i.checked=i.value===mode);ortsAnzeige(mode);

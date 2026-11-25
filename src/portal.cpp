@@ -27,13 +27,13 @@ static const char *ALLOWED[] = {"g_user", "g_cals", "g_tasks", "td_token", "td_f
                                 "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead", "q_undat",
                                 "day_min", "night_min", "wake_h", "sleep_h", "safe_bot", "show_home", "ms_client",
                                 "ms_tenant", "ms_cals", "ms_lists", "ms_planner", "src_google", "src_todoist",
-                                "ota_auto", "ms_now"};
+                                "ota_auto", "ms_now", "voll_alle"};
 // Schluessel, die das Webinterface lesen darf (keine Geheimnisse)
 static const char *READABLE[] = {"g_user", "g_email", "g_cals", "g_tasks", "td_filter", "tz_home", "loc_mode",
                                  "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead",
                                  "q_undat", "day_min", "night_min", "wake_h", "sleep_h", "safe_bot", "show_home",
                                  "ms_client", "ms_tenant", "ms_user", "ms_cals", "ms_lists", "ms_planner",
-                                 "src_google", "src_todoist", "ota_auto"};
+                                 "src_google", "src_todoist", "ota_auto", "voll_alle"};
 
 String apSsid() {
   uint8_t mac[6];
@@ -109,7 +109,7 @@ static void handleState() {
 static bool validValue(const char *k, const String &v) {
   struct R { const char *k; int lo, hi; } ranges[] = {{"slots", 1, 12}, {"q_over", 0, 12}, {"q_due", 0, 12},
       {"q_dead", 0, 12}, {"q_undat", 0, 12}, {"day_min", 1, 1440}, {"night_min", 5, 1440}, {"wake_h", 0, 23},
-      {"sleep_h", 0, 24}, {"safe_bot", 380, 480}};
+      {"sleep_h", 0, 24}, {"safe_bot", 380, 480}, {"voll_alle", 1, 1000}};
   for (auto &r : ranges) {
     if (strcmp(r.k, k)) continue;
     if (!v.length()) return true;

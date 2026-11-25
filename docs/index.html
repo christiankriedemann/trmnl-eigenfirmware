@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TRMNL Display einrichten</title>
+<meta name="description" content="Eigene Software f&uuml;r das TRMNL-Display installieren: Kalender, Aufgaben und Wetter direkt vom Display, ohne eigenen Server.">
+<script type="module" src="esp-web-tools/install-button.js"></script>
+<style>
+:root{--papier:#e3e5e0;--tinte:#000;--weiss:#fff;--graphit:#5b5f5a;--linie:#c9ccc5;--aktion:#1d4ed8;--schlecht:#b42318}
+*{box-sizing:border-box}
+body{margin:0;background:var(--papier);color:var(--tinte);font:18px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:clamp(20px,5vw,48px) clamp(16px,4vw,32px) 64px}
+h1{font-size:clamp(32px,6vw,46px);line-height:1.05;font-weight:850;margin:0 0 12px;letter-spacing:-.01em}
+.unter{color:var(--graphit);margin:0 0 28px;max-width:58ch}
+.bild{display:block;width:100%;height:auto;border:10px solid #fbfbf9;border-bottom-width:18px;border-radius:12px;box-shadow:0 0 0 1px var(--linie);background:#fff;margin:0 0 36px}
+h2{font-size:24px;font-weight:850;margin:40px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--tinte)}
+ol.schritte{list-style:none;counter-reset:s;padding:0;margin:0}
+ol.schritte>li{counter-increment:s;position:relative;padding:0 0 22px 56px;min-height:44px}
+ol.schritte>li::before{content:counter(s);position:absolute;left:0;top:-2px;width:38px;height:38px;border-radius:50%;background:var(--tinte);color:#fff;font-weight:800;display:grid;place-items:center}
+ol.schritte b{display:block;font-size:19px}
+ol.schritte p{margin:2px 0 0;color:var(--graphit)}
+.knopfzeile{margin:8px 0 4px}
+esp-web-install-button button,.knopf{font:inherit;font-weight:700;font-size:19px;background:var(--aktion);color:#fff;border:0;border-radius:999px;padding:14px 28px;cursor:pointer}
+.hinweis{background:var(--weiss);border-left:4px solid var(--tinte);padding:12px 16px;margin:12px 0}
+.hinweis.rot{border-left-color:var(--schlecht)}
+ul{padding-left:20px}
+details{border-top:1px solid var(--linie);padding:10px 0}
+summary{cursor:pointer;font-weight:650}
+footer{color:var(--graphit);font-size:15px;margin-top:48px;border-top:1px solid var(--linie);padding-top:16px}
+a{color:var(--aktion)}
+:focus-visible{outline:3px solid var(--aktion);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+  <h1>TRMNL Display einrichten</h1>
+  <p class="unter">Diese Software l&auml;sst dein TRMNL-Display Termine, Aufgaben und Wetter selbst abholen. Es braucht nur ein WLAN, keinen eigenen Server und kein TRMNL-Konto. Die Installation dauert etwa zwei Minuten.</p>
+  <img class="bild" src="beispiel.png" width="800" height="480" alt="Beispiel: drei Tage mit Terminen und Wetter, rechts die wichtigsten Aufgaben">
+
+  <h2>Was du brauchst</h2>
+  <ul>
+    <li>Ein <b>TRMNL OG</b> (7,5 Zoll, schwarz-wei&szlig;) mit dem Chip ESP32-C3. Die neuere Ausf&uuml;hrung mit ESP32-C5 wird noch nicht unterst&uuml;tzt, die Seite erkennt das und bricht dann ab.</li>
+    <li>Ein <b>USB-C-Kabel, das Daten &uuml;bertr&auml;gt</b>. Manche Ladekabel k&ouml;nnen nur laden, dann wird das Display nicht gefunden.</li>
+    <li>Einen Computer mit <b>Google Chrome</b> oder <b>Microsoft Edge</b> (Mac oder Windows). Safari und Firefox k&ouml;nnen das nicht.</li>
+  </ul>
+
+  <h2>So geht's</h2>
+  <ol class="schritte">
+    <li><b>Display anschlie&szlig;en</b><p>Mit dem USB-C-Kabel an den Computer stecken.</p></li>
+    <li><b>Display wecken</b><p>Kurz die Taste auf der R&uuml;ckseite dr&uuml;cken. Das Display schl&auml;ft sonst und ist f&uuml;r den Computer unsichtbar.</p></li>
+    <li><b>Installieren</b>
+      <p>Auf den Knopf klicken. Im Fenster das Ger&auml;t ausw&auml;hlen (es hei&szlig;t meist &bdquo;USB JTAG/serial debug unit&ldquo;) und auf &bdquo;Verbinden&ldquo; klicken. Danach auf &bdquo;Install&ldquo; und noch einmal &bdquo;Install&ldquo;. Die folgenden Fenster sind englisch.</p>
+      <div class="knopfzeile">
+        <esp-web-install-button manifest="firmware/manifest.json">
+          <button slot="activate" class="knopf">Installieren</button>
+          <div slot="unsupported" class="hinweis rot">Dieser Browser kann keine Ger&auml;te &uuml;ber USB ansprechen. Bitte die Seite in Google Chrome oder Microsoft Edge &ouml;ffnen.</div>
+          <div slot="not-allowed" class="hinweis rot">Die Seite muss &uuml;ber https ge&ouml;ffnet werden.</div>
+        </esp-web-install-button>
+      </div>
+      <p>Das Aufspielen dauert etwa eine Minute. Kabel bitte nicht abziehen.</p></li>
+    <li><b>Mit dem Handy einrichten</b><p>Das Display startet neu und zeigt einen QR-Code. Scanne ihn mit dem Handy: Es verbindet sich mit dem Display, und die Einrichtung &ouml;ffnet sich. Dort tr&auml;gst du dein WLAN ein und verbindest Kalender und Aufgaben. Danach kannst du das Kabel abziehen.</p></li>
+  </ol>
+
+  <h2>Fragen</h2>
+  <details><summary>Das Display wird nicht gefunden</summary>
+    <ul><li>Taste auf der R&uuml;ckseite direkt vor dem Klick auf &bdquo;Installieren&ldquo; dr&uuml;cken.</li>
+      <li>Ein anderes Kabel probieren. Viele Kabel k&ouml;nnen nur laden.</li>
+      <li>Einen anderen USB-Anschluss am Computer probieren, nicht &uuml;ber einen Monitor oder Hub.</li></ul></details>
+  <details><summary>War mein Display schon eingerichtet?</summary>
+    <p>Hast du das Display vorher mit der TRMNL-App ins WLAN gebracht, &uuml;bernimmt diese Software die WLAN-Daten. Kalender und Aufgaben richtest du trotzdem neu ein.</p></details>
+  <details><summary>Wie kommen Updates?</summary>
+    <p>Das Display sucht einmal am Tag selbst nach neuen Versionen und spielt sie &uuml;ber WLAN ein. Jede Version ist signiert, fremde Software nimmt es nicht an. Ein Kabel brauchst du daf&uuml;r nicht mehr.</p></details>
+  <details><summary>Zur&uuml;ck zur Original-Software von TRMNL</summary>
+    <p>Die Original-Software installierst du genauso &uuml;ber die Webseite von TRMNL. Deine Einstellungen dieser Software gehen dabei verloren.</p></details>
+  <details><summary>Welche Daten verl&auml;sst das Display?</summary>
+    <p>Das Display spricht direkt mit deinem Kalender- und Aufgabendienst, mit Open-Meteo f&uuml;r das Wetter und f&uuml;r die automatische Ortsbestimmung mit BeaconDB (WLAN-Kennungen in der N&auml;he). Es gibt keinen Server dazwischen. Zugangsdaten bleiben auf dem Display.</p></details>
+
+  <footer>Freie Software f&uuml;r das TRMNL OG, <a href="https://github.com/christiankriedemann/trmnl-eigenfirmware">Quellcode auf GitHub</a>. Kein offizielles Produkt von TRMNL. Nutzung auf eigene Verantwortung.</footer>
+</main>
+</body>
+</html>

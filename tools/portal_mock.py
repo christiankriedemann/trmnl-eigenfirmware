@@ -73,10 +73,13 @@ class H(BaseHTTPRequestHandler):
                 STATE["cfg"][k] = v
         elif p == "/api/wifi":
             s = json.loads(body)["ssid"]
-            STATE["wifis"] = [s] + [w for w in STATE["wifis"] if w != s]
+            if s not in STATE["wifis"]: STATE["wifis"].append(s)
         elif p == "/api/wifi/forget":
             s = json.loads(body)["ssid"]
             STATE["wifis"] = [w for w in STATE["wifis"] if w != s]
+        elif p == "/api/wifi/move":
+            d = json.loads(body); w = STATE["wifis"]; i = w.index(d["ssid"]); j = i + (1 if d["dir"] > 0 else -1)
+            if 0 <= j < len(w): w[i], w[j] = w[j], w[i]
         elif p == "/api/mslogout":
             STATE["secrets"]["ms_refresh"] = False
         self._json({"ok": True})

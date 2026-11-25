@@ -175,6 +175,19 @@ static void handleForget() {
   sendJson(200, d);
 }
 
+static void handleWifiMove() {
+  if (!allowed(true)) return;
+  touch();
+  JsonDocument in;
+  if (deserializeJson(in, server->arg("plain"))) return sendError(400, "JSON fehlerhaft");
+  cfg::moveWifi(in["ssid"] | "", in["dir"] | 0);
+  saved = true;
+  lastSave = millis();
+  JsonDocument d;
+  d["ok"] = true;
+  sendJson(200, d);
+}
+
 static void handleScan() {
   if (!allowed(false)) return;
   touch();
@@ -364,6 +377,7 @@ Result run(uint32_t firstMs, uint32_t afterSaveMs, bool keepSta) {
   web.on("/api/set", HTTP_POST, handleSet);
   web.on("/api/wifi", HTTP_POST, handleWifi);
   web.on("/api/wifi/forget", HTTP_POST, handleForget);
+  web.on("/api/wifi/move", HTTP_POST, handleWifiMove);
   web.on("/api/scan", HTTP_GET, handleScan);
   web.on("/api/google-key", HTTP_POST, handleGoogleKey);
   web.on("/api/cals", HTTP_GET, handleCals);

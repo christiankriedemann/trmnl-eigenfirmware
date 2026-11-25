@@ -483,6 +483,9 @@ static bool serialSession() {
         Serial.println("nvs: " + cfg::nvsStats());
         Serial.println("microsoft: " + cfg::get("ms_user") + " | Fehler: " + cfg::get("ms_err"));
         Serial.println("fertig");
+      } else if (cmd == "wifiup" || cmd == "wifidown") {
+        bool ok = cfg::moveWifi(rest, cmd == "wifiup" ? -1 : 1);
+        Serial.println(ok ? "ok " + cmd : "FEHLER " + cmd);
       } else if (cmd == "ota") {
         wantOta = true;
         Serial.println("ok ota (Suche beim naechsten Abruf)");

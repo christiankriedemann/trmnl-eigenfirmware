@@ -89,6 +89,8 @@ ul.liste li .text small{display:block;color:var(--graphit);font-size:14px}
 .balken i.an{background:var(--tinte)}
 .linkknopf{border:0;background:none;color:var(--aktion);font-weight:600;cursor:pointer;padding:8px 4px}
 .linkknopf.rot{color:var(--schlecht)}
+.pfeilknopf{width:40px;height:40px;flex:none;border:1.5px solid var(--graphit);border-radius:50%;background:var(--weiss);font-size:18px;cursor:pointer}
+.pfeilknopf:disabled{opacity:.3;cursor:default}
 
 /* Schalter */
 .schalter{position:relative;width:52px;height:32px;flex:none}
@@ -156,8 +158,9 @@ summary{cursor:pointer;font-weight:600;padding:8px 0}
   <section id="wlan">
     <button class="zurueck nur-handy" data-zurueck>&lsaquo; Alle Bereiche</button>
     <h2>WLAN</h2>
-    <p class="erkl">Das Display merkt sich bis zu f&uuml;nf Netze und nimmt jeweils das st&auml;rkste, das es findet. So kannst du zum Beispiel dein WLAN zu Hause und den Hotspot deines Handys eintragen.</p>
+    <p class="erkl">Das Display merkt sich bis zu f&uuml;nf Netze, zum Beispiel dein WLAN zu Hause und den Hotspot deines Handys.</p>
     <h3>Gespeicherte Netze</h3>
+    <p class="erkl">Oben steht das bevorzugte Netz. Das Display nimmt das oberste, das gut zu empfangen ist, und weicht nur auf die anderen aus, wenn es nicht da ist. Mit den Pfeilen &auml;nderst du die Reihenfolge.</p>
     <ul class="liste" id="gespeichert"></ul>
     <h3>Netz hinzuf&uuml;gen</h3>
     <p class="erkl">Tippe auf ein Netz in der N&auml;he. Ein iPhone-Hotspot erscheint nur, wenn unter Pers&ouml;nlicher Hotspot &bdquo;Kompatibilit&auml;t maximieren&ldquo; eingeschaltet ist.</p>
@@ -335,7 +338,9 @@ async function lade(){
   $('p-uebersicht').className='punkt '+(st.err?'schlecht':'gut');
   $('z-uebersicht').textContent=st.last?'Aktualisiert '+st.last:'Noch keine Daten';
   // WLAN
-  $('gespeichert').innerHTML=st.wifis.length?st.wifis.map((w,i)=>`<li><div class="text">${esc(w)}<small>${w===st.sta?'jetzt verbunden':(i===0?'zuletzt hinzugefügt':'gespeichert')}</small></div><button class="linkknopf rot" data-weg="${esc(w)}">Entfernen</button></li>`).join(''):'<li><div class="text">Noch kein Netz gespeichert.</div></li>';
+  const nW=st.wifis.length;
+  $('gespeichert').innerHTML=nW?st.wifis.map((w,i)=>`<li><div class="text">${i+1}. ${esc(w)}<small>${[i===0?'bevorzugt':'',w===st.sta?'jetzt verbunden':''].filter(Boolean).join(', ')||'Ausweichnetz'}</small></div><button class="pfeilknopf" data-hoch="${esc(w)}" ${i===0?'disabled':''} aria-label="${esc(w)} nach oben">&uarr;</button><button class="pfeilknopf" data-runter="${esc(w)}" ${i===nW-1?'disabled':''} aria-label="${esc(w)} nach unten">&darr;</button><button class="linkknopf rot" data-weg="${esc(w)}">Entfernen</button></li>`).join(''):'<li><div class="text">Noch kein Netz gespeichert.</div></li>';
+  $('gespeichert').querySelectorAll('[data-hoch],[data-runter]').forEach(b=>b.onclick=async()=>{const ssid=b.dataset.hoch||b.dataset.runter;await api('/api/wifi/move',{method:'POST',body:JSON.stringify({ssid,dir:b.dataset.hoch?-1:1})});meld('Reihenfolge ge\u00e4ndert');lade()});
   $('gespeichert').querySelectorAll('[data-weg]').forEach(b=>b.onclick=async()=>{if(!confirm(`„${b.dataset.weg}“ entfernen?`))return;await api('/api/wifi/forget',{method:'POST',body:JSON.stringify({ssid:b.dataset.weg})});meld('Entfernt');lade()});
   $('z-wlan').textContent=st.wifis.length===1?'1 Netz gespeichert':`${st.wifis.length} Netze gespeichert`;
   $('p-wlan').className='punkt '+(st.sta?'gut':'schlecht');

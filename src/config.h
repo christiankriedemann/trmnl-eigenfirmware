@@ -23,7 +23,8 @@ String nvsStats();
 
 // WLANs: eigene Liste, beim ersten Start aus der Original-Firmware uebernommen
 int loadWifis(Wifi *out);
-void saveWifi(const String &ssid, const String &pass);  // vorne einreihen
+void saveWifi(const String &ssid, const String &pass);  // neu: unten anhaengen
+bool moveWifi(const String &ssid, int dir);              // dir < 0 = hoeher priorisieren
 void forgetWifi(const String &ssid);
 
 // Bekannte Schluessel (alle hoechstens 15 Zeichen)

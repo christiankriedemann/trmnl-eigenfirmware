@@ -132,16 +132,40 @@ static void writeWifis(Wifi *list, int n) {
   }
 }
 
+// Bekanntes Netz: nur das Passwort aktualisieren, Platz bleibt. Neues Netz: unten anhaengen
+// (niedrigere Prioritaet); ist die Liste voll, ersetzt es das unterste.
 void saveWifi(const String &ssid, const String &pass) {
   begin();
-  Wifi list[MAX_WIFI + 1];
+  Wifi list[MAX_WIFI];
   int n = loadWifis(list);
-  Wifi merged[MAX_WIFI];
-  int m = 0;
-  merged[m++] = {ssid, pass};
-  for (int i = 0; i < n && m < MAX_WIFI; i++)
-    if (list[i].ssid != ssid) merged[m++] = list[i];
-  writeWifis(merged, m);
+  for (int i = 0; i < n; i++) {
+    if (list[i].ssid == ssid) {
+      list[i].pass = pass;
+      writeWifis(list, n);
+      return;
+    }
+  }
+  if (n < MAX_WIFI) n++;
+  list[n - 1] = {ssid, pass};
+  writeWifis(list, n);
+}
+
+// Prioritaet aendern: dir < 0 = nach oben (bevorzugt), dir > 0 = nach unten
+bool moveWifi(const String &ssid, int dir) {
+  begin();
+  Wifi list[MAX_WIFI];
+  int n = loadWifis(list);
+  for (int i = 0; i < n; i++) {
+    if (list[i].ssid != ssid) continue;
+    int j = dir < 0 ? i - 1 : i + 1;
+    if (j < 0 || j >= n) return false;
+    Wifi t = list[i];
+    list[i] = list[j];
+    list[j] = t;
+    writeWifis(list, n);
+    return true;
+  }
+  return false;
 }
 
 void forgetWifi(const String &ssid) {

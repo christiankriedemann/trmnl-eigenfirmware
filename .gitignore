@@ -1,0 +1,6 @@
+.pio/
+preview/out/
+tools/icons/*.pbm
+*.secret*
+secrets/
+dist/

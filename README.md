@@ -4,6 +4,8 @@ Eigene Firmware für das **TRMNL OG** (ESP32-C3, 7,5″ E-Ink, 800 × 480, 1 Bit
 
 ![Beispiel](docs/beispiel.png)
 
+**Installieren:** [christiankriedemann.github.io/trmnl-eigenfirmware](https://christiankriedemann.github.io/trmnl-eigenfirmware/) im Browser (Chrome oder Edge) öffnen, Display per USB anschließen, „Installieren“ klicken. Nur für das TRMNL OG mit ESP32-C3.
+
 ## Was es kann
 
 - **Kalender:** Google Workspace (Dienstkonto mit domänenweiter Delegierung) und Microsoft 365 (Anmeldung per Gerätecode am Display).

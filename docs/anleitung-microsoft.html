@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anleitung: Microsoft 365 f&uuml;r das TRMNL Display</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<main>
+  <p><a href="./">&lsaquo; Zur Installation</a></p>
+  <h1>Microsoft 365 einrichten</h1>
+  <p class="unter">Diese Anleitung ist f&uuml;r die Person, die euer Microsoft 365 verwaltet. Sie legt einmal eine App an, danach k&ouml;nnen sich alle in der Firma am Display anmelden. Dauer: etwa 10 Minuten. Es entstehen keine Kosten.</p>
+
+  <div class="hinweis"><b>Am Ende brauchst du zwei Angaben f&uuml;r das Display:</b> die <span class="markiert">Anwendungs-ID (Client-ID)</span> und die <span class="markiert">Verzeichnis-ID (Mandanten-ID)</span>. Beide sind nicht geheim.</div>
+
+  <h2>In Microsoft Entra</h2>
+  <ol class="schritte">
+    <li><b>Neue App anlegen</b>
+      <div class="tun"><a href="https://entra.microsoft.com" target="_blank" rel="noopener">entra.microsoft.com</a> &ouml;ffnen, dann <span class="markiert">Anwendungen</span>, <span class="markiert">App-Registrierungen</span>, <span class="markiert">Neue Registrierung</span>.</div>
+      <p class="info">Daf&uuml;r brauchst du die Rolle &bdquo;Anwendungsadministrator&ldquo; oder &bdquo;Globaler Administrator&ldquo;.</p></li>
+    <li><b>Name und Kontotyp</b>
+      <div class="tun">Name: <span class="markiert">TRMNL Display</span>. Kontotypen: <span class="markiert">Nur Konten in diesem Organisationsverzeichnis</span>. Umleitungs-URI leer lassen. <span class="markiert">Registrieren</span>.</div></li>
+    <li><b>Anmeldung am Display erlauben</b>
+      <div class="tun">In der neuen App: <span class="markiert">Authentifizierung</span>, ganz unten <span class="markiert">&Ouml;ffentliche Clientflows zulassen</span> auf <span class="markiert">Ja</span>, dann <span class="markiert">Speichern</span>.</div>
+      <p class="info">Ohne diese Einstellung scheitert die Anmeldung am Display mit dem Fehler AADSTS7000218. Ein Clientgeheimnis ist nicht n&ouml;tig.</p></li>
+    <li><b>Berechtigungen hinzuf&uuml;gen</b>
+      <div class="tun"><span class="markiert">API-Berechtigungen</span>, <span class="markiert">Berechtigung hinzuf&uuml;gen</span>, <span class="markiert">Microsoft Graph</span>, <span class="markiert">Delegierte Berechtigungen</span>. Ausw&auml;hlen:
+        <ul><li><span class="markiert">Calendars.ReadBasic</span></li><li><span class="markiert">Tasks.Read</span></li><li><span class="markiert">User.Read</span></li><li><span class="markiert">offline_access</span></li></ul></div>
+      <p class="info">Damit liest das Display nur Betreff und Zeiten eigener Termine sowie Aufgaben aus Planner und To Do, nichts anderes, und schreibt nichts. Sollen auch Kalender angezeigt werden, die Kolleginnen und Kollegen freigegeben haben, zus&auml;tzlich <b>Calendars.Read.Shared</b> ausw&auml;hlen (diese Berechtigung umfasst Termindetails).</p></li>
+    <li><b>Zustimmung erteilen</b>
+      <div class="tun">Auf <span class="markiert">Administratorzustimmung f&uuml;r &hellip; erteilen</span> klicken und best&auml;tigen.</div>
+      <p class="info">Ohne Zustimmung m&uuml;sste jede Person beim Anmelden selbst zustimmen, was viele Firmen-Einstellungen verbieten.</p></li>
+    <li><b>Angaben notieren</b>
+      <div class="tun">In der <span class="markiert">&Uuml;bersicht</span> der App die <span class="markiert">Anwendungs-ID (Client)</span> und die <span class="markiert">Verzeichnis-ID (Mandant)</span> kopieren.</div></li>
+  </ol>
+
+  <h2>Am Display</h2>
+  <ol class="schritte">
+    <li><b>Einrichtung &ouml;ffnen</b>
+      <div class="tun">Am Display die <span class="taste">Taste</span> 2 Sekunden halten und den QR-Code mit dem Handy scannen.</div></li>
+    <li><b>Microsoft verbinden</b>
+      <div class="tun"><span class="markiert">Kalender und Aufgaben</span>, bei Microsoft 365 auf <span class="markiert">Verbinden</span>, die beiden IDs eintragen, dann <span class="markiert">Weiter</span>.</div></li>
+    <li><b>Am Display anmelden</b>
+      <div class="tun">Auf <span class="markiert">Fertig, Display aktualisieren</span> tippen. Das Display zeigt einen Code: Den unter <b>microsoft.com/devicelogin</b> eingeben und mit dem Firmenkonto anmelden.</div>
+      <p class="info">Danach h&auml;lt sich die Anmeldung von selbst aktuell. Neu anmelden muss man nur nach einem Passwortwechsel oder wenn das Display &uuml;ber 90 Tage ausgeschaltet war. Das Display zeigt das dann an.</p></li>
+  </ol>
+
+  <h2>Falls etwas nicht klappt</h2>
+  <details><summary>Die Anmeldung wird blockiert</summary>
+    <p>Manche Firmen sperren die Anmeldung per Ger&auml;tecode mit einer Richtlinie f&uuml;r bedingten Zugriff. Dann muss die IT f&uuml;r diese App eine Ausnahme einrichten.</p></details>
+  <details><summary>Freigegebene Kalender erscheinen nicht</summary>
+    <p>In der App die Berechtigung <b>Calendars.Read.Shared</b> erg&auml;nzen und die Zustimmung erneut erteilen. Danach in der Einrichtung des Displays &bdquo;Freigegebene Kalender&ldquo; einschalten und neu anmelden.</p></details>
+
+  <footer>Kein offizielles Produkt von TRMNL oder Microsoft.</footer>
+</main>
+</body>
+</html>

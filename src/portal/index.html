@@ -58,6 +58,7 @@ main section{display:none}
 main section.aktiv{display:block}
 main h2{margin:20px 0 4px;font-size:26px;font-weight:850;line-height:1.1;padding-bottom:8px;border-bottom:2px solid var(--tinte)}
 main h3{margin:24px 0 4px;font-size:18px}
+main h4{margin:16px 0 2px;font-size:16px}
 .zurueck{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:6px 0;border:0;background:none;
   color:var(--aktion);font-weight:600;cursor:pointer}
 .erkl{color:var(--graphit);margin:6px 0 12px;max-width:62ch}
@@ -121,6 +122,33 @@ summary{cursor:pointer;font-weight:600;padding:8px 0}
 .fertig button{width:100%;max-width:420px}
 #meldung{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);
   background:var(--tinte);color:#fff;padding:10px 16px;border-radius:10px;max-width:90vw;display:none;z-index:5}
+/* Quellen (Kalender und Aufgaben) */
+.quelle{background:var(--weiss);border:1.5px solid var(--linie);border-radius:12px;padding:16px;margin:16px 0}
+.quelle.offen{border-style:dashed}
+.quelle.aktion{border:2.5px solid var(--aktion)}
+.qkopf{display:flex;align-items:flex-start;gap:12px}
+.qkopf h3{margin:0;font-size:19px}
+.qkopf small{display:block;color:var(--graphit);font-size:14px}
+.badge{margin-left:auto;flex:none;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--papier);color:var(--graphit)}
+.badge.gut{background:#dcefe3;color:var(--gut)}
+.badge.aktion{background:#dbe5fb;color:var(--aktion)}
+.badge.pause{background:#eceee9;color:var(--graphit)}
+.aufgabe{background:#eef3fe;border-left:5px solid var(--aktion);border-radius:6px;padding:12px 14px;margin:12px 0;font-weight:600}
+.aufgabe b{display:block;font-size:18px;margin-bottom:2px}
+.quelle>.haupt{margin-top:12px}
+.quelle .formular{margin-top:12px;border-top:1px solid var(--linie);padding-top:4px}
+.quelle .fuss{display:flex;justify-content:flex-end;gap:12px;margin-top:8px;border-top:1px solid var(--linie);padding-top:6px}
+.quelle .anleitung{font-size:14px;color:var(--graphit);word-break:break-all}
+/* Einrichtungsfuehrung */
+.einrichtung{background:var(--weiss);border:2.5px solid var(--aktion);border-radius:12px;padding:16px;margin:16px 0}
+.einrichtung h3{margin:0 0 8px;font-size:20px}
+ol.stufen{list-style:none;padding:0;margin:0 0 12px}
+ol.stufen li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--linie);color:var(--graphit)}
+ol.stufen li .marke{width:28px;height:28px;flex:none;border-radius:50%;border:2px solid var(--linie);display:grid;place-items:center;font-weight:800;font-size:14px}
+ol.stufen li.erledigt .marke{background:var(--gut);border-color:var(--gut);color:#fff}
+ol.stufen li.jetzt{color:var(--tinte);font-weight:700}
+ol.stufen li.jetzt .marke{border-color:var(--aktion);color:var(--aktion)}
+a.haupt{display:inline-block;text-decoration:none;min-height:46px;padding:11px 20px;border-radius:999px;background:var(--aktion);color:#fff;font-weight:650}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -132,6 +160,7 @@ summary{cursor:pointer;font-weight:600;padding:8px 0}
 
 <div class="app">
 <nav aria-label="Bereiche">
+  <div id="einrichtung"></div>
   <div class="rahmen nur-handy"><img id="bild1" alt="Aktuelles Bild auf dem Display"></div>
   <ul>
     <li><a href="#uebersicht" data-ziel="uebersicht"><span class="punkt" id="p-uebersicht"></span><span><b>&Uuml;bersicht</b><small id="z-uebersicht">Status und aktuelles Bild</small></span><span class="pfeil">&rsaquo;</span></a></li>
@@ -181,42 +210,8 @@ summary{cursor:pointer;font-weight:600;padding:8px 0}
   <section id="konten">
     <button class="zurueck nur-handy" data-zurueck>&lsaquo; Alle Bereiche</button>
     <h2>Kalender und Aufgaben</h2>
-    <p class="erkl">Hier legst du fest, woher das Display Termine und Aufgaben holt. Mehrere Quellen lassen sich kombinieren. Mit dem Schalter pausierst du eine Quelle, ohne die Anmeldung zu verlieren.</p>
-
-    <h3>Microsoft 365 (Outlook, Planner, To Do)</h3>
-    <ul class="liste"><li><div class="text"><span id="ms-status">&nbsp;</span><small id="ms-detail"></small></div></li></ul>
-    <div class="reihe"><button class="haupt" id="msAnmelden">Am Display anmelden</button><button class="linkknopf rot" id="msAbmelden" hidden>Abmelden</button></div>
-    <p class="erkl" id="ms-hilfe">Nach dem Tippen zeigt das Display einen QR-Code und einen Code. Den Code gibst du auf dem Handy unter microsoft.com/devicelogin ein und meldest dich mit deinem Firmenkonto an.</p>
-    <div id="ms-auswahl" hidden>
-      <div class="feld"><label>Kalender</label><p class="erkl">Schalte die Kalender ein, die erscheinen sollen. Ist keiner eingeschaltet, zeigt das Display nur deinen Hauptkalender.</p><div id="mscals"><button class="neben" id="msKalLaden">Kalender anzeigen</button></div></div>
-      <div class="feld"><label>To-Do-Listen</label><p class="erkl">Ohne Auswahl werden alle Listen gezeigt, au&szlig;er &bdquo;Gekennzeichnete E-Mails&ldquo;.</p><div id="mslists"><button class="neben" id="msListenLaden">Listen anzeigen</button></div></div>
-      <ul class="liste"><li><div class="text">Planner-Aufgaben zeigen<small>Aufgaben, die dir in Planner zugewiesen sind.</small></div><label class="schalter"><input type="checkbox" id="ms_planner"><span></span></label></li>
-        <li><div class="text">Freigegebene Kalender<small>Auch Kalender, die Kolleginnen und Kollegen f&uuml;r dich freigegeben haben. Dabei darf das Display Termindetails lesen. Nach dem Einschalten meldest du dich einmal neu am Display an.</small></div><label class="schalter"><input type="checkbox" id="ms_shared"><span></span></label></li></ul>
-    </div>
-    <details><summary>F&uuml;r Fortgeschrittene: App-Registrierung</summary>
-      <p class="erkl">Diese beiden Angaben bekommst du von deiner IT. Sie stehen in Entra bei der App &bdquo;TRMNL Display&ldquo;.</p>
-      <div class="feld"><label for="ms_client">Anwendungs-ID (Client-ID)</label><input type="text" id="ms_client" autocomplete="off" spellcheck="false"></div>
-      <div class="feld"><label for="ms_tenant">Verzeichnis-ID (Mandant)</label><input type="text" id="ms_tenant" autocomplete="off" spellcheck="false" placeholder="organizations"></div>
-      <button class="neben" data-speichern="ms_client,ms_tenant">Speichern</button></details>
-
-    <h3>Google Workspace (Kalender, Google Tasks)</h3>
-    <ul class="liste"><li><div class="text"><span id="g-status">&nbsp;</span><small id="g-detail"></small></div><label class="schalter" title="Google verwenden"><input type="checkbox" id="src_google"><span></span></label></li></ul>
-    <div id="g-auswahl" hidden>
-      <div class="feld"><label>Kalender</label><p class="erkl">Schalte die Kalender ein, deren Termine auf dem Display erscheinen sollen. Alle anderen bleiben ausgeblendet.</p><div id="gcals"><button class="neben" id="gKalLaden">Kalender anzeigen</button></div></div>
-    </div>
-    <details><summary>F&uuml;r Fortgeschrittene: Dienstkonto</summary>
-      <p class="erkl">Den Schl&uuml;ssel (JSON-Datei) und die Freigabe richtet die Administration deines Google Workspace ein. Falls die Datei sich nicht ausw&auml;hlen l&auml;sst: Seite in Safari bzw. Chrome &ouml;ffnen statt im Anmeldefenster.</p>
-      <div class="feld"><label for="gfile">Schl&uuml;sseldatei</label><input type="file" id="gfile" accept=".json,application/json"></div>
-      <div class="feld"><label for="g_user">E-Mail-Adresse, deren Kalender gelesen werden</label><input type="email" id="g_user" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="name@firma.de"></div>
-      <button class="neben" data-speichern="g_user">Speichern</button></details>
-
-    <h3>Todoist</h3>
-    <ul class="liste"><li><div class="text"><span id="t-status">&nbsp;</span><small>Zeigt f&auml;llige, &uuml;berf&auml;llige und wichtige Aufgaben.</small></div><label class="schalter" title="Todoist verwenden"><input type="checkbox" id="src_todoist"><span></span></label></li></ul>
-    <details><summary>Todoist verbinden</summary>
-      <p class="erkl">Den Schl&uuml;ssel findest du in Todoist unter Einstellungen, Integrationen, Entwickler: &bdquo;API-Token kopieren&ldquo;.</p>
-      <div class="feld"><label for="td_token">API-Token</label><input type="password" id="td_token" autocomplete="off" spellcheck="false"></div>
-      <div class="feld"><label for="td_filter">Filter (optional)</label><p class="erkl">Todoist-Filter, welche Aufgaben infrage kommen. Leer lassen f&uuml;r die Voreinstellung.</p><input type="text" id="td_filter" autocomplete="off" spellcheck="false"></div>
-      <button class="neben" data-speichern="td_token,td_filter">Speichern</button></details>
+    <p class="erkl">Verbinde die Dienste, aus denen das Display Termine und Aufgaben holt. Mehrere lassen sich kombinieren.</p>
+    <div id="quellen"></div>
   </section>
 
   <!-- Anzeige -->
@@ -297,12 +292,8 @@ async function api(p,o={}){o.headers={'X-TRMNL':'1','Content-Type':'application/
 async function setze(obj,text){try{await api('/api/set',{method:'POST',body:JSON.stringify(obj)});meld(text||'Gespeichert');await lade();bild()}catch(e){meld(e.message)}}
 
 /* Navigation */
-let listenGeladen=false;
-function listenAuto(){if(listenGeladen)return;listenGeladen=true;
-  if(!$('g-auswahl').hidden)$('gKalLaden').click();
-  if(!$('ms-auswahl').hidden){$('msKalLaden').click();$('msListenLaden').click()}}
 function zeige(ziel){
-  if(ziel==='konten')setTimeout(listenAuto,300);
+  if(ziel==='konten')listenAuto();
   document.querySelectorAll('main section').forEach(s=>s.classList.toggle('aktiv',s.id===ziel));
   document.querySelectorAll('nav a').forEach(a=>a.toggleAttribute('aria-current',a.dataset.ziel===ziel)||a.dataset.ziel===ziel&&a.setAttribute('aria-current','page'));
   document.body.classList.toggle('detail',!!location.hash);
@@ -326,10 +317,7 @@ const ZONEN=['Europe/Berlin','Europe/Amsterdam','Europe/Vienna','Europe/Zurich',
 $('tz_home').innerHTML=ZONEN.map(z=>`<option>${z}</option>`).join('');
 $('tz_home').onchange=()=>setze({tz_home:$('tz_home').value});
 document.querySelectorAll('input[name=loc_mode]').forEach(i=>i.onchange=()=>{ortsAnzeige(i.value);setze({loc_mode:i.value})});
-$('ms_shared').onchange=()=>{const an=$('ms_shared').checked;
-  if(!confirm(an?'Freigegebene Kalender einschalten? Danach meldest du dich am Display neu an. Deine IT muss dafuer die Berechtigung \u201eCalendars.Read.Shared\u201c freigegeben haben.':'Freigegebene Kalender ausschalten? Danach meldest du dich am Display neu an.')){$('ms_shared').checked=!an;return}
-  setze({ms_shared:an?'1':'0'},'Gespeichert. Die Anmeldung startet, wenn du auf \u201eFertig\u201c tippst')};
-for(const id of ['src_google','src_todoist','ms_planner','ota_auto'])$(id).onchange=()=>setze({[id]:$(id).checked?'1':'0'},$(id).checked?'Eingeschaltet':'Ausgeschaltet');
+$('ota_auto').onchange=()=>setze({ota_auto:$('ota_auto').checked?'1':'0'},$('ota_auto').checked?'Eingeschaltet':'Ausgeschaltet');
 document.querySelectorAll('[data-speichern]').forEach(b=>b.onclick=()=>{const o={};for(const k of b.dataset.speichern.split(',')){const e=$(k);if(e.type==='password'&&!e.value)continue;o[k]=e.value.trim()}setze(o)});
 
 function ortsAnzeige(mode){$('ortsuche').hidden=mode!=='fixed';
@@ -353,25 +341,12 @@ async function lade(){
   $('gespeichert').querySelectorAll('[data-weg]').forEach(b=>b.onclick=async()=>{if(!confirm(`„${b.dataset.weg}“ entfernen?`))return;await api('/api/wifi/forget',{method:'POST',body:JSON.stringify({ssid:b.dataset.weg})});meld('Entfernt');lade()});
   $('z-wlan').textContent=st.wifis.length===1?'1 Netz gespeichert':`${st.wifis.length} Netze gespeichert`;
   $('p-wlan').className='punkt '+(st.sta?'gut':'schlecht');
-  // Konten
-  const msAn=s.ms_refresh, msDa=!!c.ms_client;
-  $('ms-status').innerHTML=!msDa?'Nicht eingerichtet':msAn?`<span class="gut">Angemeldet</span>`:'<span class="schlecht">Nicht angemeldet</span>';
-  const msN=(c.ms_cals||'').split('\n').filter(Boolean).length;
-  $('ms-detail').textContent=msAn&&c.ms_user?`${c.ms_user} \u00b7 ${msN?msN+' Kalender':'Hauptkalender'}`:(!msDa?'F\u00fcr die Anmeldung braucht das Display die Angaben deiner IT (unten).':'');
-  $('msAnmelden').hidden=!msDa||msAn;$('msAbmelden').hidden=!msAn;$('ms-hilfe').hidden=!msDa||msAn;$('ms-auswahl').hidden=!msAn;
-  $('ms_planner').checked=(c.ms_planner||'1')!=='0';
-  $('ms_shared').checked=c.ms_shared==='1';
-  const gDa=s.g_key&&c.g_user;
-  $('g-status').innerHTML=gDa?(c.src_google==='0'?'Pausiert':'<span class="gut">Verbunden</span>'):'Nicht eingerichtet';
-  $('g-detail').textContent=gDa?`${c.g_user} · ${(c.g_cals||'').split('\n').filter(Boolean).length} Kalender`:'';
-  $('src_google').checked=c.src_google!=='0';$('src_google').disabled=!gDa;$('g-auswahl').hidden=!gDa;
-  $('t-status').innerHTML=s.td_token?(c.src_todoist==='0'?'Pausiert':'<span class="gut">Verbunden</span>'):'Nicht eingerichtet';
-  $('src_todoist').checked=c.src_todoist!=='0';$('src_todoist').disabled=!s.td_token;
-  const quellen=[msAn&&'Microsoft',gDa&&c.src_google!=='0'&&'Google',s.td_token&&c.src_todoist!=='0'&&'Todoist'].filter(Boolean);
-  $('z-konten').textContent=quellen.length?quellen.join(', '):'Noch keine Quelle';
-  $('p-konten').className='punkt '+(quellen.length?'gut':'schlecht');
-  for(const k of ['ms_client','ms_tenant','g_user','td_filter'])if(document.activeElement!==$(k))$(k).value=c[k]||'';
-  $('td_token').placeholder=s.td_token?'gespeichert, leer lassen zum Behalten':'';
+  // Konten und Einrichtungsfuehrung
+  renderQuellen();
+  const anzahl=QUELLEN.filter(q=>zustand(q)==='verbunden').length;
+  $('z-konten').textContent=anzahl?QUELLEN.filter(q=>zustand(q)==='verbunden').map(q=>q.kurz).join(', '):(QUELLEN.some(q=>zustand(q)==='aktion')?'Bitte abschlie\u00dfen':'Noch nichts verbunden');
+  $('p-konten').className='punkt '+(anzahl?'gut':'schlecht');
+  renderEinrichtung(anzahl);
   // Anzeige
   const takt=c.day_min||'10',sl=c.slots||'7';
   document.querySelectorAll('input[name=day_min]').forEach(i=>i.checked=i.value===takt);
@@ -402,18 +377,123 @@ $('zeigen').onclick=()=>{const p=$('w_pass');p.type=p.type==='password'?'text':'
 $('wlanSpeichern').onclick=async()=>{const ssid=$('w_ssid').value;if(!ssid){meld('Bitte ein Netz wählen');return}
   try{await api('/api/wifi',{method:'POST',body:JSON.stringify({ssid,pass:$('w_pass').value})});$('w_pass').value='';$('wlanform').hidden=true;meld('Netz gespeichert');lade()}catch(e){meld(e.message)}};
 
-/* Kalender- und Listenauswahl */
+/* Quellen: jede kennt drei Zustaende.
+   offen     = nicht verbunden: Knopf "Verbinden", der genau die fehlenden Angaben abfragt
+   aktion    = es fehlt ein Schritt des Nutzers (z. B. am Display anmelden, Kalender waehlen)
+   verbunden = Schalter "Auf dem Display zeigen", Auswahl, "Trennen" */
+const ANLEITUNG='christiankriedemann.github.io/trmnl-eigenfirmware/';
+const QUELLEN=[
+  {id:'google',name:'Google Workspace',kurz:'Google',was:'Google Kalender und Google Tasks',schalter:'src_google'},
+  {id:'microsoft',name:'Microsoft 365',kurz:'Microsoft',was:'Outlook-Kalender, Planner und To Do',schalter:'src_ms'},
+  {id:'todoist',name:'Todoist',kurz:'Todoist',was:'Aufgaben aus Todoist',schalter:'src_todoist'}];
+const offenFormular={};
+function zustand(q){const c=st.cfg,s=st.secrets;
+  if(q.id==='google'){if(!(s.g_key&&c.g_user))return 'offen';return (c.g_cals||'').trim()?'verbunden':'aktion'}
+  if(q.id==='microsoft'){if(!c.ms_client)return 'offen';return s.ms_refresh?'verbunden':'aktion'}
+  return s.td_token?'verbunden':'offen'}
+function an(q){return st.cfg[q.schalter]!=='0'}
+function badge(q,z){if(z==='offen')return '<span class="badge">Nicht verbunden</span>';
+  if(z==='aktion')return '<span class="badge aktion">Noch ein Schritt</span>';
+  return an(q)?'<span class="badge gut">Verbunden</span>':'<span class="badge pause">Pausiert</span>'}
+function anleitungZeile(datei,wer){return `<p class="anleitung">${wer} Anleitung: <b>${ANLEITUNG}${datei}</b> (auf einem Gerät mit Internet öffnen)</p>`}
+
+function koerper(q,z){const c=st.cfg,s=st.secrets;
+  const schalter=`<ul class="liste"><li><div class="text"><b>Auf dem Display zeigen</b><small>Ausschalten pausiert ${q.kurz}, die Verbindung bleibt.</small></div><label class="schalter"><input type="checkbox" data-schalter="${q.schalter}" ${an(q)?'checked':''}><span></span></label></li></ul>`;
+  const trennen=`<div class="fuss"><button class="linkknopf rot" data-trennen="${q.id}">${q.kurz} trennen</button></div>`;
+  if(q.id==='google'){
+    if(z==='offen')return offenFormular.google?`<div class="formular">
+      <div class="feld"><label for="gfile">1. Schlüsseldatei des Dienstkontos</label><p class="erkl">Eine .json-Datei, die du von der Person bekommst, die euer Google Workspace verwaltet.${s.g_key?' <b class="gut">Bereits gespeichert.</b>':''}</p><input type="file" id="gfile" accept=".json,application/json"></div>
+      <div class="feld"><label for="g_user">2. Deine E-Mail-Adresse bei Google</label><input type="email" id="g_user" value="${esc(c.g_user||'')}" placeholder="name@firma.de" autocapitalize="off" spellcheck="false"></div>
+      <button class="haupt" id="gWeiter">Verbinden</button>${anleitungZeile('anleitung-google.html','Für die IT:')}</div>`
+      :`<button class="haupt" data-verbinden="google">Verbinden</button>`;
+    const aufgabe=z==='aktion'?'<div class="aufgabe"><b>Kalender auswählen</b>Schalte unten mindestens einen Kalender ein.</div>':'';
+    return `<p class="erkl">Verbunden für ${esc(c.g_user)}</p>${aufgabe}${z==='verbunden'?schalter:''}
+      <h4>Kalender</h4><div id="gcals"><p class="erkl">Lädt …</p></div>${trennen}`}
+  if(q.id==='microsoft'){
+    if(z==='offen')return offenFormular.microsoft?`<div class="formular">
+      <p class="erkl">Diese zwei Angaben bekommst du von deiner IT. Beide sind nicht geheim.</p>
+      <div class="feld"><label for="ms_client">1. Anwendungs-ID (Client-ID)</label><input type="text" id="ms_client" value="${esc(c.ms_client||'')}" placeholder="z. B. 1a2b3c4d-…" autocapitalize="off" spellcheck="false"></div>
+      <div class="feld"><label for="ms_tenant">2. Verzeichnis-ID (Mandanten-ID)</label><input type="text" id="ms_tenant" value="${esc(c.ms_tenant||'')}" placeholder="z. B. 9f8e7d6c-…" autocapitalize="off" spellcheck="false"></div>
+      <button class="haupt" id="msWeiter">Weiter</button>${anleitungZeile('anleitung-microsoft.html','Für die IT:')}</div>`
+      :`<button class="haupt" data-verbinden="microsoft">Verbinden</button>`;
+    if(z==='aktion')return `<div class="aufgabe"><b>Jetzt am Display anmelden</b>Tippe auf den Knopf. Das Display zeigt dann einen QR-Code und einen Code. Den Code gibst du unter microsoft.com/devicelogin ein und meldest dich mit deinem Firmenkonto an.</div>
+      <button class="haupt" id="msLogin">Am Display anmelden</button>
+      <div class="fuss"><button class="linkknopf" data-verbinden="microsoft">Angaben der IT ändern</button><button class="linkknopf rot" data-trennen="microsoft">Microsoft trennen</button></div>`;
+    return `<p class="erkl">Angemeldet als ${esc(c.ms_user||'')}</p>${schalter}
+      <h4>Kalender</h4><p class="erkl">Ist keiner eingeschaltet, erscheint dein Hauptkalender.</p><div id="mscals"><p class="erkl">Lädt …</p></div>
+      <h4>To-Do-Listen</h4><p class="erkl">Ist keine eingeschaltet, erscheinen alle außer „Gekennzeichnete E-Mails“.</p><div id="mslists"><p class="erkl">Lädt …</p></div>
+      <ul class="liste"><li><div class="text"><b>Planner-Aufgaben</b><small>Aufgaben, die dir in Planner zugewiesen sind.</small></div><label class="schalter"><input type="checkbox" data-schalter="ms_planner" ${(c.ms_planner||'1')!=='0'?'checked':''}><span></span></label></li>
+      <li><div class="text"><b>Freigegebene Kalender</b><small>Auch Kalender, die andere für dich freigegeben haben. Danach einmal neu am Display anmelden.</small></div><label class="schalter"><input type="checkbox" id="ms_shared" ${c.ms_shared==='1'?'checked':''}><span></span></label></li></ul>${trennen}`}
+  // Todoist
+  if(z==='offen')return offenFormular.todoist?`<div class="formular">
+    <div class="feld"><label for="td_token">Dein Todoist-Schlüssel (API-Token)</label><p class="erkl">In Todoist: Einstellungen, Integrationen, Entwickler, „API-Token kopieren“. Dann hier einfügen.</p><input type="password" id="td_token" autocomplete="off" spellcheck="false"></div>
+    <button class="haupt" id="tdWeiter">Verbinden</button></div>`
+    :`<button class="haupt" data-verbinden="todoist">Verbinden</button>`;
+  return `${schalter}<details><summary>Filter (für Fortgeschrittene)</summary><p class="erkl">Todoist-Filter, welche Aufgaben infrage kommen. Leer lassen für die Voreinstellung.</p>
+    <input type="text" id="td_filter" value="${esc(c.td_filter||'')}" spellcheck="false"><button class="neben" id="tdFilter" style="margin-top:8px">Filter speichern</button></details>${trennen}`}
+
+function renderQuellen(){
+  // aktive Quellen und offene Schritte zuerst
+  const rang={aktion:0,verbunden:1,offen:2};
+  const liste=[...QUELLEN].sort((a,b)=>rang[zustand(a)]-rang[zustand(b)]);
+  $('quellen').innerHTML=liste.map(q=>{const z=zustand(q);
+    return `<article class="quelle ${z}" id="q-${q.id}"><div class="qkopf"><div><h3>${q.name}</h3><small>${q.was}</small></div>${badge(q,z)}</div>${koerper(q,z)}</article>`}).join('');
+  const Q=$('quellen');
+  Q.querySelectorAll('[data-verbinden]').forEach(b=>b.onclick=()=>{offenFormular[b.dataset.verbinden]=true;
+    if(b.dataset.verbinden==='microsoft'&&zustand(QUELLEN[1])==='aktion'){st.cfg.ms_client='';}
+    renderQuellen();const f=Q.querySelector('.formular input');if(f)f.focus()});
+  Q.querySelectorAll('[data-schalter]').forEach(i=>i.onchange=()=>setze({[i.dataset.schalter]:i.checked?'1':'0'},i.checked?'Eingeschaltet':'Pausiert'));
+  Q.querySelectorAll('[data-trennen]').forEach(b=>b.onclick=async()=>{const q=QUELLEN.find(x=>x.id===b.dataset.trennen);
+    if(!confirm(`${q.name} vom Display trennen? Die Zugangsdaten werden vom Display gelöscht.`))return;
+    await api('/api/disconnect',{method:'POST',body:JSON.stringify({quelle:q.id})});meld(`${q.kurz} getrennt`);listenGeladen={};await lade();bild()});
+  if($('gWeiter'))$('gWeiter').onclick=async()=>{try{const f=$('gfile').files[0];
+      if(f)await api('/api/google-key',{method:'POST',body:await f.text()});else if(!st.secrets.g_key){meld('Bitte die Schlüsseldatei auswählen');return}
+      const u=$('g_user').value.trim();if(!u.includes('@')){meld('Bitte deine E-Mail-Adresse eintragen');return}
+      offenFormular.google=false;await setze({g_user:u,src_google:'1'},'Google verbunden')}catch(e){meld(e.message)}};
+  if($('msWeiter'))$('msWeiter').onclick=async()=>{const cl=$('ms_client').value.trim(),te=$('ms_tenant').value.trim();
+    if(!/^[0-9a-f-]{36}$/i.test(cl)){meld('Die Anwendungs-ID hat 36 Zeichen, z. B. 1a2b3c4d-…');return}
+    if(te&&!/^[0-9a-f-]{36}$/i.test(te)&&!te.includes('.')){meld('Die Verzeichnis-ID hat 36 Zeichen');return}
+    offenFormular.microsoft=false;await setze({ms_client:cl,ms_tenant:te||'organizations',src_ms:'1'},'Gespeichert. Jetzt am Display anmelden.')};
+  if($('msLogin'))$('msLogin').onclick=async()=>{await api('/api/set',{method:'POST',body:JSON.stringify({ms_now:'1'})});fertig('Das Display zeigt jetzt einen Code. Gib ihn auf dem Handy unter microsoft.com/devicelogin ein (dein Handy braucht dafür wieder Internet: WLAN des Displays trennen oder mobile Daten nutzen).')};
+  if($('tdWeiter'))$('tdWeiter').onclick=async()=>{const t=$('td_token').value.trim();if(t.length<20){meld('Bitte den Schlüssel aus Todoist einfügen');return}
+    offenFormular.todoist=false;await setze({td_token:t,src_todoist:'1'},'Todoist verbunden')};
+  if($('tdFilter'))$('tdFilter').onclick=()=>setze({td_filter:$('td_filter').value.trim()});
+  if($('ms_shared'))$('ms_shared').onchange=()=>{const a=$('ms_shared').checked;
+    if(!confirm(a?'Freigegebene Kalender einschalten? Danach meldest du dich am Display neu an. Deine IT muss dafür „Calendars.Read.Shared“ freigegeben haben.':'Freigegebene Kalender ausschalten? Danach meldest du dich am Display neu an.')){$('ms_shared').checked=!a;return}
+    setze({ms_shared:a?'1':'0'},'Gespeichert')};
+  listenAuto();
+}
+
+/* Kalender- und Listenauswahl: laedt beim Anzeigen von selbst */
+let listenGeladen={};
 function auswahl(el,key,items,leer){const sel=(st.cfg[key]||'').split('\n');
+  if(!$(el))return;
   $(el).innerHTML=items.length?`<ul class="liste">${items.map(c=>`<li><div class="text">${esc(c.name)}${c.primary?'<small>Hauptkalender</small>':''}${c.flagged?'<small>Gekennzeichnete E-Mails</small>':''}</div><label class="schalter"><input type="checkbox" value="${esc(c.id)}" ${sel.includes(c.id)?'checked':''}><span></span></label></li>`).join('')}</ul>`:`<p class="erkl">${leer}</p>`;
   $(el).querySelectorAll('input').forEach(i=>i.onchange=()=>{const ids=[...$(el).querySelectorAll('input:checked')].map(x=>x.value);setze({[key]:ids.join('\n')},'Auswahl gespeichert')})}
-async function laden(knopf,el,pfad,key,leer){knopf.disabled=true;knopf.textContent='Lädt …';try{auswahl(el,key,await api(pfad),leer)}catch(e){$(el).innerHTML=`<p class="hinweis">${esc(e.message)}</p>`}}
-$('gKalLaden').onclick=()=>laden($('gKalLaden'),'gcals','/api/cals','g_cals','Keine Kalender gefunden.');
-$('msKalLaden').onclick=()=>laden($('msKalLaden'),'mscals','/api/mscals','ms_cals','Keine Kalender gefunden.');
-$('msListenLaden').onclick=()=>laden($('msListenLaden'),'mslists','/api/mslists','ms_lists','Keine Listen gefunden.');
-$('gfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{await api('/api/google-key',{method:'POST',body:await f.text()});meld('Schlüssel gespeichert');lade()}catch(err){meld(err.message)}};
-$('msAnmelden').onclick=async()=>{await setze({ms_now:'1'},'Anmeldung startet, wenn du auf „Fertig“ tippst')};
-$('msAbmelden').onclick=async()=>{if(!confirm('Microsoft-Konto vom Display abmelden?'))return;await api('/api/mslogout',{method:'POST'});meld('Abgemeldet');lade()};
+async function liste(el,pfad,key,leer){if(!$(el))return;
+  if(listenGeladen[el]){auswahl(el,key,listenGeladen[el],leer);return}
+  try{listenGeladen[el]=await api(pfad);auswahl(el,key,listenGeladen[el],leer)}
+  catch(e){$(el).innerHTML=`<p class="hinweis">${esc(e.message)}</p>`}}
+function listenAuto(){if(!location.hash.includes('konten')&&window.innerWidth<860)return;
+  liste('gcals','/api/cals','g_cals','Keine Kalender gefunden.');
+  liste('mscals','/api/mscals','ms_cals','Keine Kalender gefunden.');
+  liste('mslists','/api/mslists','ms_lists','Keine Listen gefunden.');
+  if($('gfile'))$('gfile').onchange=null}
 
+/* Einrichtungsfuehrung auf der Startseite, solange etwas fehlt */
+function renderEinrichtung(anzahl){
+  const wlan=!!st.sta, quelle=anzahl>0, offen=QUELLEN.find(q=>zustand(q)==='aktion');
+  if(wlan&&quelle&&!offen){$('einrichtung').innerHTML='';return}
+  const stufen=[{t:'Mit dem WLAN verbinden',ok:wlan,ziel:'#wlan'},
+    {t:offen?`${offen.name}: noch ein Schritt`:'Kalender oder Aufgaben verbinden',ok:quelle&&!offen,ziel:'#konten'},
+    {t:'Auf „Fertig“ tippen',ok:false,ziel:null}];
+  const jetzt=stufen.findIndex(x=>!x.ok);
+  $('einrichtung').innerHTML=`<div class="einrichtung"><h3>Einrichtung</h3><ol class="stufen">${stufen.map((x,i)=>`<li class="${x.ok?'erledigt':(i===jetzt?'jetzt':'')}"><span class="marke">${x.ok?'✓':i+1}</span>${x.t}</li>`).join('')}</ol>
+    ${stufen[jetzt].ziel?`<a class="haupt" href="${stufen[jetzt].ziel}">Weiter: ${stufen[jetzt].t}</a>`:''}</div>`}
+
+/* Abschluss */
+async function fertig(text){try{await api('/api/done',{method:'POST'})}catch(e){}
+  document.body.innerHTML=`<header><h1>Fertig</h1><p>${text||'Das Display aktualisiert sich jetzt. Du kannst dieses Fenster schließen und dein Handy wieder mit deinem WLAN verbinden.'}</p></header>`}
 /* Ort suchen */
 $('ortSuchen').onclick=async()=>{const q=$('ortq').value.trim();if(!q)return;$('orte').innerHTML='<li>Suche …</li>';
   try{const j=await api('/api/geocode?q='+encodeURIComponent(q));$('orte').innerHTML=j.length?j.map((o,i)=>`<li><div class="text">${esc(o.name)}<small>${esc([o.region,o.land].filter(Boolean).join(', '))}</small></div><button class="neben" data-i="${i}">Wählen</button></li>`).join(''):'<li>Nichts gefunden. Anders schreiben?</li>';
@@ -423,8 +503,7 @@ $('ortq').onkeydown=e=>{if(e.key==='Enter')$('ortSuchen').click()};
 
 /* Geraet */
 $('otaJetzt').onclick=async()=>{await api('/api/ota',{method:'POST'});meld('Wird geprüft, wenn du auf „Fertig“ tippst')};
-$('fertig').onclick=async()=>{try{await api('/api/done',{method:'POST'})}catch(e){}
-  document.body.innerHTML='<header><h1>Fertig</h1><p>Das Display aktualisiert sich jetzt. Du kannst dieses Fenster schließen und dein Handy wieder mit deinem WLAN verbinden.</p></header>'};
+$('fertig').onclick=()=>fertig();
 
 zeige((location.hash||'#uebersicht').slice(1));
 lade().catch(e=>{$('kopfzeile').textContent='Keine Verbindung zum Display. Bist du mit dem WLAN des Displays verbunden?'});

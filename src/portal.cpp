@@ -28,13 +28,13 @@ static const char *ALLOWED[] = {"g_user", "g_cals", "g_tasks", "td_token", "td_f
                                 "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead", "q_undat",
                                 "day_min", "night_min", "wake_h", "sleep_h", "safe_bot", "show_home", "ms_client",
                                 "ms_tenant", "ms_cals", "ms_lists", "ms_planner", "src_google", "src_todoist",
-                                "ota_auto", "ms_now", "voll_alle", "ms_shared"};
+                                "ota_auto", "ms_now", "voll_alle", "ms_shared", "src_ms"};
 // Schluessel, die das Webinterface lesen darf (keine Geheimnisse)
 static const char *READABLE[] = {"g_user", "g_email", "g_cals", "g_tasks", "td_filter", "tz_home", "loc_mode",
                                  "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead",
                                  "q_undat", "day_min", "night_min", "wake_h", "sleep_h", "safe_bot", "show_home",
                                  "ms_client", "ms_tenant", "ms_user", "ms_cals", "ms_lists", "ms_planner",
-                                 "src_google", "src_todoist", "ota_auto", "voll_alle", "ms_shared"};
+                                 "src_google", "src_todoist", "ota_auto", "voll_alle", "ms_shared", "src_ms"};
 
 String apSsid() {
   uint8_t mac[6];
@@ -343,6 +343,28 @@ static void handleOta() {
   sendJson(200, d);
 }
 
+// Quelle trennen: Zugangsdaten und Auswahl vom Geraet loeschen
+static void handleDisconnect() {
+  if (!allowed(true)) return;
+  touch();
+  JsonDocument in;
+  if (deserializeJson(in, server->arg("plain"))) return sendError(400, "JSON fehlerhaft");
+  String q = in["quelle"] | "";
+  const char *google[] = {"g_key", "g_email", "g_user", "g_cals", "g_tasks", "src_google"};
+  const char *microsoft[] = {"ms_refresh", "ms_user", "ms_client", "ms_tenant", "ms_cals", "ms_lists", "ms_shared",
+                             "ms_planner", "ms_err", "ms_now", "src_ms"};
+  const char *todoist[] = {"td_token", "td_filter", "src_todoist"};
+  if (q == "google") for (const char *k : google) cfg::remove(k);
+  else if (q == "microsoft") for (const char *k : microsoft) cfg::remove(k);
+  else if (q == "todoist") for (const char *k : todoist) cfg::remove(k);
+  else return sendError(400, "unbekannte Quelle");
+  saved = true;
+  lastSave = millis();
+  JsonDocument d;
+  d["ok"] = true;
+  sendJson(200, d);
+}
+
 static void handleDone() {
   if (!allowed(true)) return;
   touch();
@@ -391,6 +413,7 @@ Result run(uint32_t firstMs, uint32_t afterSaveMs, bool keepSta) {
   web.on("/api/mslists", HTTP_GET, handleMsLists);
   web.on("/api/mslogout", HTTP_POST, handleMsLogout);
   web.on("/api/ota", HTTP_POST, handleOta);
+  web.on("/api/disconnect", HTTP_POST, handleDisconnect);
   web.on("/api/done", HTTP_POST, handleDone);
   web.onNotFound(redirect);
   web.begin();

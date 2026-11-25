@@ -18,9 +18,20 @@ h2{font-size:24px;font-weight:850;margin:40px 0 12px;padding-bottom:8px;border-b
 ol.schritte{list-style:none;counter-reset:s;padding:0;margin:0}
 ol.schritte>li{counter-increment:s;position:relative;padding:0 0 22px 56px;min-height:44px}
 ol.schritte>li::before{content:counter(s);position:absolute;left:0;top:-2px;width:38px;height:38px;border-radius:50%;background:var(--tinte);color:#fff;font-weight:800;display:grid;place-items:center}
-ol.schritte b{display:block;font-size:19px}
-ol.schritte p{margin:2px 0 0;color:var(--graphit)}
-.knopfzeile{margin:8px 0 4px}
+ol.schritte>li>b{display:block;font-size:21px;line-height:1.25;margin-bottom:8px}
+.tun{background:var(--weiss);border:3px solid var(--tinte);border-radius:10px;padding:14px 16px;font-weight:700;font-size:19px;line-height:1.45}
+.tun esp-web-install-button{display:block;margin-top:12px}
+.info{margin:8px 0 0;color:var(--graphit);font-size:15px;line-height:1.45;max-width:60ch}
+.markiert{background:#fde68a;padding:1px 6px;border-radius:4px;white-space:nowrap}
+.taste{display:inline-block;border:2px solid var(--tinte);border-radius:6px;padding:0 8px}
+.warnung{background:#fde68a;border-radius:8px;padding:10px 14px;margin:0 0 20px}
+.nachbau{margin:12px 0 0;max-width:460px;background:#fff;border:1px solid #bbb;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.12);font:14px/1.4 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden}
+.nachbau .kopf{padding:12px 14px;color:#333;border-bottom:1px solid #e3e3e3}
+.nachbau .eintrag{padding:9px 14px;color:#555;border-bottom:1px solid #f0f0f0}
+.nachbau .gewaehlt{background:#dbeafe;color:#000;font-weight:700;outline:3px solid #f59e0b;outline-offset:-3px}
+.nachbau .knoepfe{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px}
+.nachbau .knoepfe span{border:1px solid #bbb;border-radius:6px;padding:5px 12px}
+.nachbau .knoepfe .ok{background:#1a73e8;color:#fff;border-color:#1a73e8;outline:3px solid #f59e0b}
 esp-web-install-button button,.knopf{font:inherit;font-weight:700;font-size:19px;background:var(--aktion);color:#fff;border:0;border-radius:999px;padding:14px 28px;cursor:pointer}
 .hinweis{background:var(--weiss);border-left:4px solid var(--tinte);padding:12px 16px;margin:12px 0}
 .hinweis.rot{border-left-color:var(--schlecht)}
@@ -46,21 +57,43 @@ a{color:var(--aktion)}
   </ul>
 
   <h2>So geht's</h2>
+  <p class="warnung"><b>Achtung:</b> Die Installation l&ouml;scht alles, was auf dem Display gespeichert ist. Danach richtest du es neu ein.</p>
   <ol class="schritte">
-    <li><b>Display anschlie&szlig;en</b><p>Mit dem USB-C-Kabel an den Computer stecken.</p></li>
-    <li><b>Display wecken</b><p>Kurz die Taste auf der R&uuml;ckseite dr&uuml;cken. Das Display schl&auml;ft sonst und ist f&uuml;r den Computer unsichtbar.</p></li>
-    <li><b>Installieren</b>
-      <p>Auf den Knopf klicken. Im Fenster das Ger&auml;t ausw&auml;hlen (es hei&szlig;t meist &bdquo;USB JTAG/serial debug unit&ldquo;) und auf &bdquo;Verbinden&ldquo; klicken. Danach auf &bdquo;Install&ldquo; und noch einmal &bdquo;Install&ldquo;. Die folgenden Fenster sind englisch.</p>
-      <div class="knopfzeile">
+    <li><b>Display anschlie&szlig;en</b>
+      <div class="tun">Display mit dem USB-C-Kabel an den Computer stecken.</div></li>
+    <li><b>Display wecken</b>
+      <div class="tun">Kurz die <span class="taste">Taste</span> auf der R&uuml;ckseite dr&uuml;cken.</div>
+      <p class="info">Das Display schl&auml;ft sonst und ist f&uuml;r den Computer unsichtbar. Wenn sp&auml;ter nichts gefunden wird: noch einmal dr&uuml;cken.</p></li>
+    <li><b>Installation starten</b>
+      <div class="tun">Hier klicken:
         <esp-web-install-button manifest="firmware/manifest.json">
           <button slot="activate" class="knopf">Installieren</button>
-          <div slot="unsupported" class="hinweis rot">Dieser Browser kann keine Ger&auml;te &uuml;ber USB ansprechen. Bitte die Seite in Google Chrome oder Microsoft Edge &ouml;ffnen.</div>
+          <div slot="unsupported" class="hinweis rot">Dieser Browser kann keine Ger&auml;te &uuml;ber USB ansprechen. Bitte diese Seite in <b>Google Chrome</b> oder <b>Microsoft Edge</b> &ouml;ffnen.</div>
           <div slot="not-allowed" class="hinweis rot">Die Seite muss &uuml;ber https ge&ouml;ffnet werden.</div>
-        </esp-web-install-button>
-      </div>
-      <p>Das Aufspielen dauert etwa eine Minute. Kabel bitte nicht abziehen.</p></li>
-    <li><b>Mit dem Handy einrichten</b><p>Das Display startet neu und zeigt einen QR-Code. Scanne ihn mit dem Handy: Es verbindet sich mit dem Display, und die Einrichtung &ouml;ffnet sich. Dort tr&auml;gst du dein WLAN ein und verbindest Kalender und Aufgaben. Danach kannst du das Kabel abziehen.</p></li>
+        </esp-web-install-button></div></li>
+    <li><b>Display ausw&auml;hlen</b>
+      <div class="tun">Im Fenster den Eintrag <span class="markiert">USB JTAG/serial debug unit</span> anklicken, dann <span class="markiert">Verbinden</span>.</div>
+      <figure class="nachbau" aria-hidden="true">
+        <div class="kopf">christiankriedemann.github.io m&ouml;chte eine Verbindung mit einem seriellen Anschluss herstellen</div>
+        <div class="eintrag">Bluetooth-Incoming-Port</div>
+        <div class="eintrag gewaehlt">USB JTAG/serial debug unit (cu.usbmodem1101)</div>
+        <div class="eintrag">Debug-Console</div>
+        <div class="knoepfe"><span>Abbrechen</span><span class="ok">Verbinden</span></div>
+      </figure>
+      <p class="info">Das Fenster kommt von Chrome und sieht je nach Computer etwas anders aus. Die anderen Eintr&auml;ge geh&ouml;ren zum Computer, sie spielen keine Rolle. Auf Windows steht dort oft &bdquo;USB-JTAG/serial debug unit (COM3)&ldquo;.</p></li>
+    <li><b>Installieren best&auml;tigen</b>
+      <div class="tun">Auf <span class="markiert">Install TRMNL Eigenfirmware</span> klicken, dann noch einmal auf <span class="markiert">Install</span>.</div>
+      <p class="info">Diese Fenster sind englisch. Die Installation dauert etwa eine Minute, das Kabel bitte so lange stecken lassen. Am Ende steht &bdquo;Installation complete&ldquo;.</p></li>
+    <li><b>Mit dem Handy einrichten</b>
+      <div class="tun">Den QR-Code auf dem Display mit der <b>Handykamera</b> scannen und den Schritten folgen.</div>
+      <p class="info">Das Handy verbindet sich dabei mit dem Display. Die Einrichtung f&uuml;hrt dich durch WLAN, Kalender und Aufgaben. Danach kannst du das Kabel abziehen.</p></li>
   </ol>
+
+  <h2>Anleitungen f&uuml;r die IT</h2>
+  <p>Damit das Display Termine und Aufgaben aus der Firma lesen darf, richtet die Person, die euer Konto verwaltet, einmal einen Zugang ein:</p>
+  <ul><li><a href="anleitung-microsoft.html"><b>Microsoft 365</b> (Outlook-Kalender, Planner, To Do)</a></li>
+    <li><a href="anleitung-google.html"><b>Google Workspace</b> (Google Kalender, Google Tasks)</a></li></ul>
+  <p class="info">F&uuml;r Todoist ist nichts vorzubereiten, den Schl&uuml;ssel tr&auml;gst du selbst in der Einrichtung ein.</p>
 
   <h2>Fragen</h2>
   <details><summary>Das Display wird nicht gefunden</summary>

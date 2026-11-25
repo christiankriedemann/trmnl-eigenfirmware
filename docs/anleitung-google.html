@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anleitung: Google Workspace f&uuml;r das TRMNL Display</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<main>
+  <p><a href="./">&lsaquo; Zur Installation</a></p>
+  <h1>Google Workspace einrichten</h1>
+  <p class="unter">Diese Anleitung ist f&uuml;r die Person, die euer Google Workspace verwaltet. Sie legt einmal ein Dienstkonto an, &uuml;ber das das Display Kalender und Google Tasks liest. Dauer: etwa 15 Minuten. Es entstehen keine Kosten.</p>
+
+  <div class="hinweis"><b>Am Ende brauchst du f&uuml;r das Display:</b> die <span class="markiert">Schl&uuml;sseldatei (JSON)</span> des Dienstkontos und die <span class="markiert">E-Mail-Adresse</span> der Person, deren Kalender angezeigt werden.</div>
+  <p class="warnung"><b>Wichtig:</b> Die Schl&uuml;sseldatei ist ein Zugang. Nicht per Mail verschicken, nach dem Hochladen auf das Display l&ouml;schen.</p>
+
+  <h2>In der Google Cloud Console</h2>
+  <ol class="schritte">
+    <li><b>Projekt w&auml;hlen oder anlegen</b>
+      <div class="tun"><a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a> &ouml;ffnen und oben ein Projekt w&auml;hlen oder <span class="markiert">Neues Projekt</span> anlegen.</div></li>
+    <li><b>Schnittstellen einschalten</b>
+      <div class="tun"><span class="markiert">APIs und Dienste</span>, <span class="markiert">Bibliothek</span>: <span class="markiert">Google Calendar API</span> aktivieren, dann <span class="markiert">Google Tasks API</span> aktivieren.</div></li>
+    <li><b>Dienstkonto anlegen</b>
+      <div class="tun"><span class="markiert">IAM und Verwaltung</span>, <span class="markiert">Dienstkonten</span>, <span class="markiert">Dienstkonto erstellen</span>. Name: <span class="markiert">TRMNL Display</span>. Rollen und Nutzer &uuml;berspringen, <span class="markiert">Fertig</span>.</div></li>
+    <li><b>Schl&uuml;ssel erzeugen</b>
+      <div class="tun">Das neue Dienstkonto &ouml;ffnen, <span class="markiert">Schl&uuml;ssel</span>, <span class="markiert">Schl&uuml;ssel hinzuf&uuml;gen</span>, <span class="markiert">Neuen Schl&uuml;ssel erstellen</span>, Typ <span class="markiert">JSON</span>. Die Datei wird heruntergeladen.</div>
+      <p class="info">Kommt die Meldung, dass das Erstellen von Schl&uuml;sseln gesperrt ist: Das ist eine Richtlinie der Organisation (iam.disableServiceAccountKeyCreation). Ein Organisationsadministrator kann sie f&uuml;r dieses Projekt aufheben.</p></li>
+    <li><b>Client-ID notieren</b>
+      <div class="tun">Im Dienstkonto unter <span class="markiert">Details</span> die <span class="markiert">eindeutige ID</span> (eine lange Zahl) kopieren.</div></li>
+  </ol>
+
+  <h2>In der Google Admin-Konsole</h2>
+  <ol class="schritte">
+    <li><b>Domainweite Delegierung</b>
+      <div class="tun"><a href="https://admin.google.com/ac/owl/domainwidedelegation" target="_blank" rel="noopener">admin.google.com</a>: <span class="markiert">Sicherheit</span>, <span class="markiert">Zugriffs- und Datenkontrolle</span>, <span class="markiert">API-Steuerung</span>, <span class="markiert">Domainweite Delegierung</span>, <span class="markiert">Neu hinzuf&uuml;gen</span>.</div></li>
+    <li><b>Zugriff festlegen</b>
+      <div class="tun">Client-ID: die lange Zahl von eben. OAuth-Bereiche, beide in eine Zeile:
+        <pre class="code">https://www.googleapis.com/auth/calendar.readonly,https://www.googleapis.com/auth/tasks.readonly</pre>
+        Dann <span class="markiert">Autorisieren</span>.</div>
+      <p class="info">Damit darf das Dienstkonto Kalender und Aufgaben nur lesen. Bis die Freigabe wirkt, k&ouml;nnen einige Minuten vergehen.</p></li>
+  </ol>
+
+  <h2>Am Display</h2>
+  <ol class="schritte">
+    <li><b>Einrichtung &ouml;ffnen</b>
+      <div class="tun">Am Display die <span class="taste">Taste</span> 2 Sekunden halten und den QR-Code scannen.</div>
+      <p class="info">Die Schl&uuml;sseldatei l&auml;sst sich am einfachsten vom Computer aus hochladen: im WLAN-Men&uuml; des Computers das WLAN &bdquo;TRMNL-&hellip;&ldquo; w&auml;hlen (Passwort steht auf dem Display) und im Browser 192.168.4.1 &ouml;ffnen.</p></li>
+    <li><b>Google verbinden</b>
+      <div class="tun"><span class="markiert">Kalender und Aufgaben</span>, bei Google Workspace auf <span class="markiert">Verbinden</span>, die Schl&uuml;sseldatei w&auml;hlen und die E-Mail-Adresse eintragen.</div></li>
+    <li><b>Kalender ausw&auml;hlen</b>
+      <div class="tun">Die Kalender einschalten, die erscheinen sollen. Fertig.</div></li>
+  </ol>
+
+  <footer>Kein offizielles Produkt von TRMNL oder Google.</footer>
+</main>
+</body>
+</html>

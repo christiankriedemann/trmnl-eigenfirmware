@@ -71,6 +71,7 @@ static void saveCache() {
 // Quellen lassen sich pausieren, ohne Zugangsdaten zu loeschen (src_google, src_todoist = 0)
 static bool googleOn() { return cfg::getInt("src_google", 1) != 0; }
 static bool todoistOn() { return cfg::getInt("src_todoist", 1) != 0; }
+static bool msOn() { return cfg::getInt("src_ms", 1) != 0 && ms::configured() && ms::signedIn(); }
 
 static void applyZone() {
   String home = cfg::get("tz_home", "Europe/Berlin");
@@ -250,7 +251,7 @@ static void refresh(const String &ssid) {
 
   int32_t today = tu::localDay(now);
   bool calOk = false, tasksOk = false;
-  bool anyCal = (googleOn() && cfg::has("g_cals")) || (ms::configured() && ms::signedIn());
+  bool anyCal = (googleOn() && cfg::has("g_cals")) || msOn();
   bool calFail = false;
   fresh.nEvents = 0;
   if (googleOn() && cfg::has("g_cals")) {
@@ -258,7 +259,7 @@ static void refresh(const String &ssid) {
     if (src::googleCalendar(fresh, tu::localMidnight(today), tu::localMidnight(today + 3), err)) calOk = true;
     else { log(err); lastErr = err; calFail = true; }
   }
-  if (ms::configured() && ms::signedIn()) {
+  if (msOn()) {
     err = "";
     if (ms::calendar(fresh, tu::localMidnight(today), tu::localMidnight(today + 3), err)) calOk = true;
     else { log(err); lastErr = err; calFail = true; }
@@ -279,7 +280,7 @@ static void refresh(const String &ssid) {
     err = "";
     if (src::googleTasks(fresh, err)) tasksOk = true; else { log(err); lastErr = err; }
   }
-  if (ms::configured() && ms::signedIn()) {
+  if (msOn()) {
     anyTaskSource = true;
     err = "";
     if (ms::tasks(fresh, err)) tasksOk = true; else { log(err); lastErr = err; }

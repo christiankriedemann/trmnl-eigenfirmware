@@ -21,6 +21,13 @@ STATE = {
 }
 
 
+import os
+if os.environ.get("NEU") == "1":
+    STATE.update({"sta": "", "last": "", "wifis": [], "ort": ""})
+    STATE["cfg"] = {"tz_home": "Europe/Berlin"}
+    STATE["secrets"] = {"g_key": False, "td_token": False, "ms_refresh": False}
+
+
 class H(BaseHTTPRequestHandler):
     def _json(self, obj, code=200):
         b = json.dumps(obj).encode()
@@ -70,6 +77,7 @@ class H(BaseHTTPRequestHandler):
         p = urlparse(self.path).path
         if p == "/api/set":
             for k, v in json.loads(body).items():
+                if k == "td_token": STATE["secrets"]["td_token"] = True; continue
                 STATE["cfg"][k] = v
         elif p == "/api/wifi":
             s = json.loads(body)["ssid"]
@@ -80,6 +88,13 @@ class H(BaseHTTPRequestHandler):
         elif p == "/api/wifi/move":
             d = json.loads(body); w = STATE["wifis"]; i = w.index(d["ssid"]); j = i + (1 if d["dir"] > 0 else -1)
             if 0 <= j < len(w): w[i], w[j] = w[j], w[i]
+        elif p == "/api/disconnect":
+            q = json.loads(body)["quelle"]
+            keys = {"google": ["g_user", "g_cals", "src_google"], "microsoft": ["ms_client", "ms_tenant", "ms_user", "ms_cals", "src_ms"], "todoist": ["td_filter", "src_todoist"]}[q]
+            for k in keys: STATE["cfg"].pop(k, None)
+            STATE["secrets"][{"google": "g_key", "microsoft": "ms_refresh", "todoist": "td_token"}[q]] = False
+        elif p == "/api/google-key":
+            STATE["secrets"]["g_key"] = True
         elif p == "/api/mslogout":
             STATE["secrets"]["ms_refresh"] = False
         self._json({"ok": True})

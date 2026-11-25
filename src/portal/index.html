@@ -188,7 +188,7 @@ summary{cursor:pointer;font-weight:600;padding:8px 0}
     <div class="reihe"><button class="haupt" id="msAnmelden">Am Display anmelden</button><button class="linkknopf rot" id="msAbmelden" hidden>Abmelden</button></div>
     <p class="erkl" id="ms-hilfe">Nach dem Tippen zeigt das Display einen QR-Code und einen Code. Den Code gibst du auf dem Handy unter microsoft.com/devicelogin ein und meldest dich mit deinem Firmenkonto an.</p>
     <div id="ms-auswahl" hidden>
-      <div class="feld"><label>Kalender</label><p class="erkl">Ohne Auswahl zeigt das Display deinen Hauptkalender.</p><div id="mscals"><button class="neben" id="msKalLaden">Kalender anzeigen</button></div></div>
+      <div class="feld"><label>Kalender</label><p class="erkl">Schalte die Kalender ein, die erscheinen sollen. Ist keiner eingeschaltet, zeigt das Display nur deinen Hauptkalender.</p><div id="mscals"><button class="neben" id="msKalLaden">Kalender anzeigen</button></div></div>
       <div class="feld"><label>To-Do-Listen</label><p class="erkl">Ohne Auswahl werden alle Listen gezeigt, au&szlig;er &bdquo;Gekennzeichnete E-Mails&ldquo;.</p><div id="mslists"><button class="neben" id="msListenLaden">Listen anzeigen</button></div></div>
       <ul class="liste"><li><div class="text">Planner-Aufgaben zeigen<small>Aufgaben, die dir in Planner zugewiesen sind.</small></div><label class="schalter"><input type="checkbox" id="ms_planner"><span></span></label></li>
         <li><div class="text">Freigegebene Kalender<small>Auch Kalender, die Kolleginnen und Kollegen f&uuml;r dich freigegeben haben. Dabei darf das Display Termindetails lesen. Nach dem Einschalten meldest du dich einmal neu am Display an.</small></div><label class="schalter"><input type="checkbox" id="ms_shared"><span></span></label></li></ul>
@@ -202,7 +202,7 @@ summary{cursor:pointer;font-weight:600;padding:8px 0}
     <h3>Google Workspace (Kalender, Google Tasks)</h3>
     <ul class="liste"><li><div class="text"><span id="g-status">&nbsp;</span><small id="g-detail"></small></div><label class="schalter" title="Google verwenden"><input type="checkbox" id="src_google"><span></span></label></li></ul>
     <div id="g-auswahl" hidden>
-      <div class="feld"><label>Kalender</label><p class="erkl">W&auml;hle die Kalender, deren Termine erscheinen sollen.</p><div id="gcals"><button class="neben" id="gKalLaden">Kalender anzeigen</button></div></div>
+      <div class="feld"><label>Kalender</label><p class="erkl">Schalte die Kalender ein, deren Termine auf dem Display erscheinen sollen. Alle anderen bleiben ausgeblendet.</p><div id="gcals"><button class="neben" id="gKalLaden">Kalender anzeigen</button></div></div>
     </div>
     <details><summary>F&uuml;r Fortgeschrittene: Dienstkonto</summary>
       <p class="erkl">Den Schl&uuml;ssel (JSON-Datei) und die Freigabe richtet die Administration deines Google Workspace ein. Falls die Datei sich nicht ausw&auml;hlen l&auml;sst: Seite in Safari bzw. Chrome &ouml;ffnen statt im Anmeldefenster.</p>
@@ -297,7 +297,12 @@ async function api(p,o={}){o.headers={'X-TRMNL':'1','Content-Type':'application/
 async function setze(obj,text){try{await api('/api/set',{method:'POST',body:JSON.stringify(obj)});meld(text||'Gespeichert');await lade();bild()}catch(e){meld(e.message)}}
 
 /* Navigation */
+let listenGeladen=false;
+function listenAuto(){if(listenGeladen)return;listenGeladen=true;
+  if(!$('g-auswahl').hidden)$('gKalLaden').click();
+  if(!$('ms-auswahl').hidden){$('msKalLaden').click();$('msListenLaden').click()}}
 function zeige(ziel){
+  if(ziel==='konten')setTimeout(listenAuto,300);
   document.querySelectorAll('main section').forEach(s=>s.classList.toggle('aktiv',s.id===ziel));
   document.querySelectorAll('nav a').forEach(a=>a.toggleAttribute('aria-current',a.dataset.ziel===ziel)||a.dataset.ziel===ziel&&a.setAttribute('aria-current','page'));
   document.body.classList.toggle('detail',!!location.hash);
@@ -351,7 +356,8 @@ async function lade(){
   // Konten
   const msAn=s.ms_refresh, msDa=!!c.ms_client;
   $('ms-status').innerHTML=!msDa?'Nicht eingerichtet':msAn?`<span class="gut">Angemeldet</span>`:'<span class="schlecht">Nicht angemeldet</span>';
-  $('ms-detail').textContent=msAn&&c.ms_user?c.ms_user:(!msDa?'Für die Anmeldung braucht das Display die Angaben deiner IT (unten).':'');
+  const msN=(c.ms_cals||'').split('\n').filter(Boolean).length;
+  $('ms-detail').textContent=msAn&&c.ms_user?`${c.ms_user} \u00b7 ${msN?msN+' Kalender':'Hauptkalender'}`:(!msDa?'F\u00fcr die Anmeldung braucht das Display die Angaben deiner IT (unten).':'');
   $('msAnmelden').hidden=!msDa||msAn;$('msAbmelden').hidden=!msAn;$('ms-hilfe').hidden=!msDa||msAn;$('ms-auswahl').hidden=!msAn;
   $('ms_planner').checked=(c.ms_planner||'1')!=='0';
   $('ms_shared').checked=c.ms_shared==='1';

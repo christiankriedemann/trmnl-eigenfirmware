@@ -11,8 +11,10 @@
 void modelClear(Model &m) { memset(&m, 0, sizeof(m)); m.batteryPercent = -1; }
 
 // ---------- Masse ----------
-static const int COL_X[3] = {16, 183, 350};
-static const int COL_W = 143;
+// Drei Tagesspalten zwischen x = 16 und 500 (12 px vor der Trennlinie bei 512)
+static const int COL_GAP = 16;
+static const int COL_W = (484 - 2 * COL_GAP) / 3;  // 150
+static const int COL_X[3] = {16, 16 + COL_W + COL_GAP, 16 + 2 * (COL_W + COL_GAP)};
 static const int HEADER_TOP = 14;
 static const int HEADER_LINE_Y = 104;  // 2 px Linie unter dem Tageskopf
 static const int CONTENT_TOP = 120;
@@ -50,11 +52,11 @@ static void drawDayHeader(Canvas &c, const Day &d, int x) {
   if (d.hasWeather) {
     // Wettertext unten, darueber Symbol und Temperatur (wie margin-top:auto)
     TextLine wl[1];
-    int n = wrapText(inter13b, d.weatherText, COL_W, wl, 1);
+    int n = wrapText(inter15b, d.weatherText, COL_W, wl, 1);
     float textBottom = HEADER_LINE_Y - 4 - 1;
-    float lh = 13 * 1.2f;
+    float lh = 15 * 1.15f;
     float textTop = textBottom - n * lh;
-    for (int i = 0; i < n; i++) drawLine(c, inter13b, x, baselineFor(inter13b, textTop + i * lh, lh), d.weatherText, wl[i]);
+    for (int i = 0; i < n; i++) drawLine(c, inter15b, x, baselineFor(inter15b, textTop + i * lh, lh), d.weatherText, wl[i]);
     float tempBottom = textTop - 4;
     float tempTop = tempBottom - 26;
     int tb = baselineFor(inter26b, tempTop, 26);
@@ -105,19 +107,55 @@ static int eventBlock(Canvas &c, const Event &e, int x, int y, bool draw) {
   return h;
 }
 
+// Kompakter Termin: nur das Zeitfenster, fuer volle Tage
+static const int COMPACT_H = 18;
+static const int COMPACT_GAP = 6;
+
+static int compactBlock(Canvas &c, const Event &e, int x, int y, bool draw) {
+  if (draw) {
+    c.fillRect(x, y, 5, COMPACT_H, BLACK);
+    drawText(c, inter15b, x + 10, baselineFor(inter15b, y, COMPACT_H), e.time);
+  }
+  return COMPACT_H;
+}
+
+// Passen nicht alle Termine voll, stehen die naechsten (bis zu 2) vollstaendig da und die
+// uebrigen nur mit Zeitfenster. Reicht auch das nicht, folgt "+N weitere".
 static void drawDayContent(Canvas &c, const Day &d, int x, int bottom) {
+  int avail = bottom - CONTENT_TOP;
+  int pillsH = 0;
+  for (int i = 0; i < d.nAllDay; i++) pillsH += pillBlock(c, d.allDay[i], x, 0, false) + ITEM_GAP;
+  int fullH[MAX_TIMED];
+  int allFull = pillsH;
+  for (int i = 0; i < d.nTimed; i++) { fullH[i] = eventBlock(c, d.timed[i], x, 0, false); allFull += fullH[i] + ITEM_GAP; }
+
+  int nFull = d.nTimed;  // so viele Termine voll, der Rest kompakt
+  if (allFull - ITEM_GAP > avail && d.nTimed > 0) {
+    nFull = 0;
+    for (int k = (d.nTimed < 2 ? d.nTimed : 2); k >= 0; k--) {
+      int h = pillsH;
+      for (int i = 0; i < k; i++) h += fullH[i] + ITEM_GAP;
+      h += (d.nTimed - k) * (COMPACT_H + COMPACT_GAP);
+      if (h - COMPACT_GAP <= avail) { nFull = k; break; }
+    }
+  }
+
   int y = CONTENT_TOP;
   int total = d.nAllDay + d.nTimed;
   int shown = 0;
   for (int i = 0; i < total; i++) {
-    const Event &e = i < d.nAllDay ? d.allDay[i] : d.timed[i - d.nAllDay];
     bool pill = i < d.nAllDay;
-    int h = pill ? pillBlock(c, e, x, y, false) : eventBlock(c, e, x, y, false);
-    int remaining = total - i - 1;
-    int reserve = remaining > 0 ? 20 : 0;  // Platz fuer "+N weitere"
+    int t = i - d.nAllDay;
+    const Event &e = pill ? d.allDay[i] : d.timed[t];
+    bool compact = !pill && t >= nFull;
+    int h = pill ? pillBlock(c, e, x, y, false) : (compact ? COMPACT_H : fullH[t]);
+    int gap = compact ? COMPACT_GAP : ITEM_GAP;
+    int reserve = (total - i - 1) > 0 ? 20 : 0;  // Platz fuer "+N weitere"
     if (y + h > bottom - reserve) break;
-    if (pill) pillBlock(c, e, x, y, true); else eventBlock(c, e, x, y, true);
-    y += h + ITEM_GAP;
+    if (pill) pillBlock(c, e, x, y, true);
+    else if (compact) compactBlock(c, e, x, y, true);
+    else eventBlock(c, e, x, y, true);
+    y += h + gap;
     shown++;
   }
   if (shown < total) {

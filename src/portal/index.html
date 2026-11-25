@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Display einrichten</title>
+<style>
+:root{
+  --papier:#e3e5e0; --tinte:#000; --weiss:#fff; --graphit:#5b5f5a; --linie:#c9ccc5;
+  --aktion:#1d4ed8; --gut:#17703c; --schlecht:#b42318;
+  --rand:clamp(16px,4vw,32px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--papier);color:var(--tinte);
+  font:17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--aktion)}
+:focus-visible{outline:3px solid var(--aktion);outline-offset:2px}
+
+/* Kopf */
+header{padding:calc(var(--rand) + env(safe-area-inset-top)) var(--rand) 8px}
+header h1{margin:0;font-size:30px;line-height:1.05;font-weight:850;letter-spacing:-.01em}
+header p{margin:6px 0 0;color:var(--graphit);font-size:15px}
+
+/* Aufbau: Handy eine Spalte, ab Tablet Liste links, Inhalt rechts */
+.app{display:grid;gap:0 calc(var(--rand)*1.5);padding:0 var(--rand) 120px;max-width:1080px;margin:0 auto}
+@media (min-width:860px){
+  .app{grid-template-columns:320px 1fr;align-items:start}
+  nav{position:sticky;top:16px}
+  .nur-handy{display:none!important}
+}
+@media (max-width:859px){
+  body.detail nav{display:none}
+  body:not(.detail) main{display:none}
+}
+
+/* Navigation als Einstellungsliste */
+nav ul{list-style:none;margin:16px 0 0;padding:0;border-top:2px solid var(--tinte)}
+nav a{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--linie);
+  text-decoration:none;color:var(--tinte)}
+nav a b{display:block;font-weight:700}
+nav a small{display:block;color:var(--graphit);font-size:14px;margin-top:1px}
+nav a .pfeil{margin-left:auto;color:var(--graphit);font-size:22px;line-height:1}
+nav a[aria-current="page"]{background:var(--weiss);box-shadow:-8px 0 0 var(--weiss),8px 0 0 var(--weiss)}
+.punkt{width:10px;height:10px;border-radius:50%;flex:none;background:var(--linie)}
+.punkt.gut{background:var(--gut)}.punkt.schlecht{background:var(--schlecht)}
+
+/* Live-Bild des Displays */
+.rahmen{margin:16px 0 4px;background:#f6f6f3;border:10px solid #fbfbf9;border-bottom-width:16px;
+  border-radius:10px;box-shadow:0 1px 0 var(--linie),0 0 0 1px var(--linie)}
+.rahmen img{display:block;width:100%;height:auto;aspect-ratio:800/480;image-rendering:pixelated;background:#eceee9}
+.bildzeile{display:flex;justify-content:space-between;gap:12px;color:var(--graphit);font-size:14px}
+
+/* Inhaltsbereiche */
+main section{display:none}
+main section.aktiv{display:block}
+main h2{margin:20px 0 4px;font-size:26px;font-weight:850;line-height:1.1;padding-bottom:8px;border-bottom:2px solid var(--tinte)}
+main h3{margin:24px 0 4px;font-size:18px}
+.zurueck{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:6px 0;border:0;background:none;
+  color:var(--aktion);font-weight:600;cursor:pointer}
+.erkl{color:var(--graphit);margin:6px 0 12px;max-width:62ch}
+.feld{margin:14px 0}
+.feld label{display:block;font-weight:600;margin-bottom:4px}
+.feld .erkl{margin:2px 0 6px;font-size:15px}
+input[type=text],input[type=password],input[type=email],input[type=search],select{
+  width:100%;max-width:520px;min-height:46px;padding:10px 12px;background:var(--weiss);
+  border:1.5px solid var(--graphit);border-radius:8px}
+input:focus,select:focus{border-color:var(--aktion)}
+.reihe{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+button.haupt,button.neben{min-height:46px;padding:10px 18px;border-radius:999px;cursor:pointer;font-weight:650}
+button.haupt{background:var(--aktion);color:#fff;border:0}
+button.neben{background:var(--weiss);color:var(--tinte);border:1.5px solid var(--tinte)}
+button:disabled{opacity:.5;cursor:default}
+
+/* Statusliste */
+dl.status{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:12px 0}
+dl.status dt{color:var(--graphit)}dl.status dd{margin:0;font-weight:600}
+
+/* Listen mit Eintraegen (WLAN, Konten, Kalender) */
+ul.liste{list-style:none;margin:8px 0;padding:0;border-top:1px solid var(--linie)}
+ul.liste li{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--linie)}
+ul.liste li .text{flex:1;min-width:0}
+ul.liste li .text small{display:block;color:var(--graphit);font-size:14px}
+.balken{display:inline-flex;gap:2px;align-items:flex-end;height:16px}
+.balken i{width:4px;background:var(--linie);border-radius:1px}
+.balken i.an{background:var(--tinte)}
+.linkknopf{border:0;background:none;color:var(--aktion);font-weight:600;cursor:pointer;padding:8px 4px}
+.linkknopf.rot{color:var(--schlecht)}
+
+/* Schalter */
+.schalter{position:relative;width:52px;height:32px;flex:none}
+.schalter input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.schalter span{position:absolute;inset:0;border-radius:999px;background:var(--linie);transition:background .15s}
+.schalter span::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+.schalter input:checked+span{background:var(--gut)}
+.schalter input:checked+span::after{transform:translateX(20px)}
+.schalter input:focus-visible+span{outline:3px solid var(--aktion);outline-offset:2px}
+
+/* Auswahl als Segmente */
+.segmente{display:flex;flex-wrap:wrap;gap:8px}
+.segmente label{position:relative}
+.segmente input{position:absolute;opacity:0}
+.segmente span{display:inline-block;padding:9px 14px;border:1.5px solid var(--graphit);border-radius:999px;background:var(--weiss);cursor:pointer}
+.segmente input:checked+span{background:var(--tinte);color:#fff;border-color:var(--tinte)}
+.segmente input:focus-visible+span{outline:3px solid var(--aktion);outline-offset:2px}
+
+details{margin:20px 0;border-top:1px solid var(--linie);padding-top:8px}
+summary{cursor:pointer;font-weight:600;padding:8px 0}
+.hinweis{background:var(--weiss);border-left:4px solid var(--tinte);padding:10px 14px;margin:12px 0;max-width:62ch}
+.gut{color:var(--gut)}.schlecht{color:var(--schlecht)}
+
+/* Fertig-Leiste */
+.fertig{position:fixed;left:0;right:0;bottom:0;padding:12px var(--rand) calc(12px + env(safe-area-inset-bottom));
+  background:rgba(227,229,224,.94);border-top:2px solid var(--tinte);display:flex;gap:12px;align-items:center;justify-content:center}
+.fertig button{width:100%;max-width:420px}
+#meldung{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);
+  background:var(--tinte);color:#fff;padding:10px 16px;border-radius:10px;max-width:90vw;display:none;z-index:5}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Display einrichten</h1>
+  <p id="kopfzeile">Verbinde dich mit dem Display &hellip;</p>
+</header>
+
+<div class="app">
+<nav aria-label="Bereiche">
+  <div class="rahmen nur-handy"><img id="bild1" alt="Aktuelles Bild auf dem Display"></div>
+  <ul>
+    <li><a href="#uebersicht" data-ziel="uebersicht"><span class="punkt" id="p-uebersicht"></span><span><b>&Uuml;bersicht</b><small id="z-uebersicht">Status und aktuelles Bild</small></span><span class="pfeil">&rsaquo;</span></a></li>
+    <li><a href="#wlan" data-ziel="wlan"><span class="punkt" id="p-wlan"></span><span><b>WLAN</b><small id="z-wlan">&nbsp;</small></span><span class="pfeil">&rsaquo;</span></a></li>
+    <li><a href="#konten" data-ziel="konten"><span class="punkt" id="p-konten"></span><span><b>Kalender und Aufgaben</b><small id="z-konten">&nbsp;</small></span><span class="pfeil">&rsaquo;</span></a></li>
+    <li><a href="#anzeige" data-ziel="anzeige"><span class="punkt gut"></span><span><b>Anzeige</b><small id="z-anzeige">&nbsp;</small></span><span class="pfeil">&rsaquo;</span></a></li>
+    <li><a href="#ort" data-ziel="ort"><span class="punkt gut"></span><span><b>Ort und Zeit</b><small id="z-ort">&nbsp;</small></span><span class="pfeil">&rsaquo;</span></a></li>
+    <li><a href="#geraet" data-ziel="geraet"><span class="punkt gut"></span><span><b>Ger&auml;t</b><small id="z-geraet">&nbsp;</small></span><span class="pfeil">&rsaquo;</span></a></li>
+  </ul>
+</nav>
+
+<main>
+  <!-- Uebersicht -->
+  <section id="uebersicht">
+    <button class="zurueck nur-handy" data-zurueck>&lsaquo; Alle Bereiche</button>
+    <h2>&Uuml;bersicht</h2>
+    <div class="rahmen"><img id="bild2" alt="Aktuelles Bild auf dem Display"></div>
+    <div class="bildzeile"><span>So sieht das Display mit deinen Einstellungen aus.</span><button class="linkknopf" id="neuLaden">Bild neu laden</button></div>
+    <dl class="status" id="statusliste"></dl>
+    <div id="fehlerbox"></div>
+  </section>
+
+  <!-- WLAN -->
+  <section id="wlan">
+    <button class="zurueck nur-handy" data-zurueck>&lsaquo; Alle Bereiche</button>
+    <h2>WLAN</h2>
+    <p class="erkl">Das Display merkt sich bis zu f&uuml;nf Netze und nimmt jeweils das st&auml;rkste, das es findet. So kannst du zum Beispiel dein WLAN zu Hause und den Hotspot deines Handys eintragen.</p>
+    <h3>Gespeicherte Netze</h3>
+    <ul class="liste" id="gespeichert"></ul>
+    <h3>Netz hinzuf&uuml;gen</h3>
+    <p class="erkl">Tippe auf ein Netz in der N&auml;he. Ein iPhone-Hotspot erscheint nur, wenn unter Pers&ouml;nlicher Hotspot &bdquo;Kompatibilit&auml;t maximieren&ldquo; eingeschaltet ist.</p>
+    <button class="neben" id="suchen">Netze in der N&auml;he suchen</button>
+    <ul class="liste" id="gefunden"></ul>
+    <div id="wlanform" hidden>
+      <div class="feld"><label for="w_ssid">Name des Netzes</label><input type="text" id="w_ssid" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+      <div class="feld"><label for="w_pass">Passwort</label>
+        <div class="reihe"><input type="password" id="w_pass" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="linkknopf" id="zeigen" type="button">Anzeigen</button></div></div>
+      <button class="haupt" id="wlanSpeichern">Netz speichern</button>
+    </div>
+    <details><summary>Netz ist nicht in der Liste?</summary>
+      <p class="erkl">Versteckte Netze oder Netze, die gerade nicht erreichbar sind, kannst du von Hand eintragen.</p>
+      <button class="neben" id="vonHand">Namen selbst eingeben</button></details>
+  </section>
+
+  <!-- Konten -->
+  <section id="konten">
+    <button class="zurueck nur-handy" data-zurueck>&lsaquo; Alle Bereiche</button>
+    <h2>Kalender und Aufgaben</h2>
+    <p class="erkl">Hier legst du fest, woher das Display Termine und Aufgaben holt. Mehrere Quellen lassen sich kombinieren. Mit dem Schalter pausierst du eine Quelle, ohne die Anmeldung zu verlieren.</p>
+
+    <h3>Microsoft 365 (Outlook, Planner, To Do)</h3>
+    <ul class="liste"><li><div class="text"><span id="ms-status">&nbsp;</span><small id="ms-detail"></small></div></li></ul>
+    <div class="reihe"><button class="haupt" id="msAnmelden">Am Display anmelden</button><button class="linkknopf rot" id="msAbmelden" hidden>Abmelden</button></div>
+    <p class="erkl" id="ms-hilfe">Nach dem Tippen zeigt das Display einen QR-Code und einen Code. Den Code gibst du auf dem Handy unter microsoft.com/devicelogin ein und meldest dich mit deinem Firmenkonto an.</p>
+    <div id="ms-auswahl" hidden>
+      <div class="feld"><label>Kalender</label><p class="erkl">Ohne Auswahl zeigt das Display deinen Hauptkalender.</p><div id="mscals"><button class="neben" id="msKalLaden">Kalender anzeigen</button></div></div>
+      <div class="feld"><label>To-Do-Listen</label><p class="erkl">Ohne Auswahl werden alle Listen gezeigt, au&szlig;er &bdquo;Gekennzeichnete E-Mails&ldquo;.</p><div id="mslists"><button class="neben" id="msListenLaden">Listen anzeigen</button></div></div>
+      <ul class="liste"><li><div class="text">Planner-Aufgaben zeigen<small>Aufgaben, die dir in Planner zugewiesen sind.</small></div><label class="schalter"><input type="checkbox" id="ms_planner"><span></span></label></li></ul>
+    </div>
+    <details><summary>F&uuml;r Fortgeschrittene: App-Registrierung</summary>
+      <p class="erkl">Diese beiden Angaben bekommst du von deiner IT. Sie stehen in Entra bei der App &bdquo;TRMNL Display&ldquo;.</p>
+      <div class="feld"><label for="ms_client">Anwendungs-ID (Client-ID)</label><input type="text" id="ms_client" autocomplete="off" spellcheck="false"></div>
+      <div class="feld"><label for="ms_tenant">Verzeichnis-ID (Mandant)</label><input type="text" id="ms_tenant" autocomplete="off" spellcheck="false" placeholder="organizations"></div>
+      <button class="neben" data-speichern="ms_client,ms_tenant">Speichern</button></details>
+
+    <h3>Google Workspace (Kalender, Google Tasks)</h3>
+    <ul class="liste"><li><div class="text"><span id="g-status">&nbsp;</span><small id="g-detail"></small></div><label class="schalter" title="Google verwenden"><input type="checkbox" id="src_google"><span></span></label></li></ul>
+    <div id="g-auswahl" hidden>
+      <div class="feld"><label>Kalender</label><p class="erkl">W&auml;hle die Kalender, deren Termine erscheinen sollen.</p><div id="gcals"><button class="neben" id="gKalLaden">Kalender anzeigen</button></div></div>
+    </div>
+    <details><summary>F&uuml;r Fortgeschrittene: Dienstkonto</summary>
+      <p class="erkl">Den Schl&uuml;ssel (JSON-Datei) und die Freigabe richtet die Administration deines Google Workspace ein. Falls die Datei sich nicht ausw&auml;hlen l&auml;sst: Seite in Safari bzw. Chrome &ouml;ffnen statt im Anmeldefenster.</p>
+      <div class="feld"><label for="gfile">Schl&uuml;sseldatei</label><input type="file" id="gfile" accept=".json,application/json"></div>
+      <div class="feld"><label for="g_user">E-Mail-Adresse, deren Kalender gelesen werden</label><input type="email" id="g_user" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="name@firma.de"></div>
+      <button class="neben" data-speichern="g_user">Speichern</button></details>
+
+    <h3>Todoist</h3>
+    <ul class="liste"><li><div class="text"><span id="t-status">&nbsp;</span><small>Zeigt f&auml;llige, &uuml;berf&auml;llige und wichtige Aufgaben.</small></div><label class="schalter" title="Todoist verwenden"><input type="checkbox" id="src_todoist"><span></span></label></li></ul>
+    <details><summary>Todoist verbinden</summary>
+      <p class="erkl">Den Schl&uuml;ssel findest du in Todoist unter Einstellungen, Integrationen, Entwickler: &bdquo;API-Token kopieren&ldquo;.</p>
+      <div class="feld"><label for="td_token">API-Token</label><input type="password" id="td_token" autocomplete="off" spellcheck="false"></div>
+      <div class="feld"><label for="td_filter">Filter (optional)</label><p class="erkl">Todoist-Filter, welche Aufgaben infrage kommen. Leer lassen f&uuml;r die Voreinstellung.</p><input type="text" id="td_filter" autocomplete="off" spellcheck="false"></div>
+      <button class="neben" data-speichern="td_token,td_filter">Speichern</button></details>
+  </section>
+
+  <!-- Anzeige -->
+  <section id="anzeige">
+    <button class="zurueck nur-handy" data-zurueck>&lsaquo; Alle Bereiche</button>
+    <h2>Anzeige</h2>
+    <div class="feld"><label>Wie oft aktualisieren?</label>
+      <p class="erkl">H&auml;ufiger hei&szlig;t aktueller, aber der Akku h&auml;lt k&uuml;rzer. Eine kurze Taste am Display aktualisiert jederzeit sofort.</p>
+      <div class="segmente" id="takt"></div></div>
+    <div class="feld"><label>Nachtruhe</label>
+      <p class="erkl">In dieser Zeit schaut das Display nur einmal pro Stunde nach neuen Daten.</p>
+      <div class="reihe"><span>von</span><select id="sleep_h" style="width:auto"></select><span>bis</span><select id="wake_h" style="width:auto"></select></div></div>
+    <div class="feld"><label>Anzahl Aufgaben</label>
+      <p class="erkl">So viele Aufgaben zeigt die rechte Spalte h&ouml;chstens, wenn genug Platz ist.</p>
+      <div class="segmente" id="slots"></div></div>
+    <details><summary>F&uuml;r Fortgeschrittene</summary>
+      <div class="feld"><label>Mischung der Aufgaben</label>
+        <p class="erkl">Wie viele Pl&auml;tze jede Gruppe mindestens bekommt, bevor der Rest nach Dringlichkeit aufgef&uuml;llt wird.</p>
+        <div class="reihe">
+          <label>&Uuml;berf&auml;llig <select id="q_over" style="width:auto"></select></label>
+          <label>F&auml;llig <select id="q_due" style="width:auto"></select></label>
+          <label>Deadline <select id="q_dead" style="width:auto"></select></label>
+          <label>Ohne Datum <select id="q_undat" style="width:auto"></select></label></div></div>
+      <div class="feld"><label for="safe_bot">Unterer Rand</label>
+        <p class="erkl">Der Rahmen verdeckt unten einen Streifen. Bis zu dieser Pixelzeile (von 480) wird gezeichnet. Kleiner = mehr Abstand.</p>
+        <input type="text" inputmode="numeric" id="safe_bot" style="max-width:120px"></div>
+      <button class="neben" data-speichern="q_over,q_due,q_dead,q_undat,safe_bot">Speichern</button></details>
+  </section>
+
+  <!-- Ort und Zeit -->
+  <section id="ort">
+    <button class="zurueck nur-handy" data-zurueck>&lsaquo; Alle Bereiche</button>
+    <h2>Ort und Zeit</h2>
+    <div class="feld"><label>Standort f&uuml;r Wetter und Uhrzeit</label>
+      <div class="segmente" id="loc_mode_wahl">
+        <label><input type="radio" name="loc_mode" value="auto"><span>Automatisch</span></label>
+        <label><input type="radio" name="loc_mode" value="fixed"><span>Fester Ort</span></label></div>
+      <p class="erkl" id="ort-erkl"></p></div>
+    <div id="ortsuche" hidden>
+      <div class="feld"><label for="ortq">Ort suchen</label>
+        <div class="reihe"><input type="search" id="ortq" placeholder="z. B. Bonn" autocomplete="off"><button class="neben" id="ortSuchen">Suchen</button></div></div>
+      <ul class="liste" id="orte"></ul>
+    </div>
+    <div class="feld"><label for="tz_home">Heimatzeitzone</label>
+      <p class="erkl">Bist du in einer anderen Zeitzone, zeigt das Display unten den Ort und die Zeitverschiebung an. Termine rechnet es immer in die Zeit vor Ort um.</p>
+      <select id="tz_home"></select></div>
+  </section>
+
+  <!-- Geraet -->
+  <section id="geraet">
+    <button class="zurueck nur-handy" data-zurueck>&lsaquo; Alle Bereiche</button>
+    <h2>Ger&auml;t</h2>
+    <dl class="status" id="geraeteliste"></dl>
+    <h3>Updates</h3>
+    <p class="erkl">Das Display sucht einmal am Tag selbst nach neuen Versionen und spielt sie ein. Jede Version ist signiert, fremde Software wird abgelehnt.</p>
+    <ul class="liste"><li><div class="text">Automatisch aktualisieren</div><label class="schalter"><input type="checkbox" id="ota_auto"><span></span></label></li></ul>
+    <button class="neben" id="otaJetzt">Jetzt nach Update suchen</button>
+    <h3>Taste am Display</h3>
+    <p class="erkl">Kurz dr&uuml;cken: sofort aktualisieren. Zwei Sekunden halten: diese Einrichtung &ouml;ffnen.</p>
+  </section>
+</main>
+</div>
+
+<div class="fertig"><button class="haupt" id="fertig">Fertig, Display aktualisieren</button></div>
+<div id="meldung" role="status" aria-live="polite"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let st={cfg:{},secrets:{}};
+let meldTimer;
+function meld(t){const m=$('meldung');m.textContent=t;m.style.display='block';clearTimeout(meldTimer);meldTimer=setTimeout(()=>m.style.display='none',3200)}
+async function api(p,o={}){o.headers={'X-TRMNL':'1','Content-Type':'application/json'};const r=await fetch(p,o);
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('Fehler '+r.status));return j}
+async function setze(obj,text){try{await api('/api/set',{method:'POST',body:JSON.stringify(obj)});meld(text||'Gespeichert');await lade();bild()}catch(e){meld(e.message)}}
+
+/* Navigation */
+function zeige(ziel){
+  document.querySelectorAll('main section').forEach(s=>s.classList.toggle('aktiv',s.id===ziel));
+  document.querySelectorAll('nav a').forEach(a=>a.toggleAttribute('aria-current',a.dataset.ziel===ziel)||a.dataset.ziel===ziel&&a.setAttribute('aria-current','page'));
+  document.body.classList.toggle('detail',!!location.hash);
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',()=>zeige((location.hash||'#uebersicht').slice(1)));
+document.querySelectorAll('[data-zurueck]').forEach(b=>b.onclick=()=>{history.replaceState(null,'',location.pathname);document.body.classList.remove('detail');window.scrollTo(0,0)});
+
+/* Display-Bild */
+function bild(){const u='/api/screen?t='+Date.now();$('bild1').src=u;$('bild2').src=u}
+$('neuLaden').onclick=bild;
+
+/* Auswahlfelder fuellen */
+function segmente(el,name,werte,fmt){$(el).innerHTML=werte.map(v=>`<label><input type="radio" name="${name}" value="${v}"><span>${fmt(v)}</span></label>`).join('');
+  $(el).querySelectorAll('input').forEach(i=>i.onchange=()=>setze({[name]:i.value}))}
+segmente('takt','day_min',[5,10,15,30,60],v=>v<60?`alle ${v} Min.`:'stündlich');
+segmente('slots','slots',[3,4,5,6,7,8,9,10],v=>String(v));
+for(const id of ['sleep_h','wake_h']){$(id).innerHTML=[...Array(24).keys()].map(h=>`<option value="${h}">${h} Uhr</option>`).join('');$(id).onchange=()=>setze({[id]:$(id).value})}
+for(const id of ['q_over','q_due','q_dead','q_undat'])$(id).innerHTML=[...Array(9).keys()].map(n=>`<option>${n}</option>`).join('');
+const ZONEN=['Europe/Berlin','Europe/Amsterdam','Europe/Vienna','Europe/Zurich','Europe/Brussels','Europe/Paris','Europe/London','Europe/Lisbon','Europe/Madrid','Europe/Rome','Europe/Warsaw','Europe/Athens','Europe/Istanbul','Asia/Dubai','Asia/Kolkata','Asia/Bangkok','Asia/Singapore','Asia/Shanghai','Asia/Tokyo','Australia/Sydney','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Sao_Paulo'];
+$('tz_home').innerHTML=ZONEN.map(z=>`<option>${z}</option>`).join('');
+$('tz_home').onchange=()=>setze({tz_home:$('tz_home').value});
+document.querySelectorAll('input[name=loc_mode]').forEach(i=>i.onchange=()=>{ortsAnzeige(i.value);setze({loc_mode:i.value})});
+for(const id of ['src_google','src_todoist','ms_planner','ota_auto'])$(id).onchange=()=>setze({[id]:$(id).checked?'1':'0'},$(id).checked?'Eingeschaltet':'Ausgeschaltet');
+document.querySelectorAll('[data-speichern]').forEach(b=>b.onclick=()=>{const o={};for(const k of b.dataset.speichern.split(',')){const e=$(k);if(e.type==='password'&&!e.value)continue;o[k]=e.value.trim()}setze(o)});
+
+function ortsAnzeige(mode){$('ortsuche').hidden=mode!=='fixed';
+  $('ort-erkl').textContent=mode==='fixed'?'Das Wetter kommt immer von diesem Ort, auch auf Reisen.':'Das Display bestimmt seinen Standort über die WLANs in der Nähe. Auf Reisen folgen Wetter und Uhrzeit von selbst.'}
+
+/* Zustand anzeigen */
+function zeit(t){return t||'noch nie'}
+async function lade(){
+  st=await api('/api/state');const c=st.cfg,s=st.secrets;
+  $('kopfzeile').textContent=st.sta?`Verbunden mit ${st.sta}`:'Display ist mit keinem WLAN verbunden';
+  // Uebersicht
+  const akku=st.akku>=0?`${st.akku} %${st.akku<=20?' · bitte aufladen':''}`:'unbekannt';
+  $('statusliste').innerHTML=`<dt>Internet</dt><dd>${esc(st.sta||'nicht verbunden')}</dd><dt>Zuletzt aktualisiert</dt><dd>${esc(zeit(st.last))}</dd><dt>Akku</dt><dd>${esc(akku)}</dd>`;
+  $('fehlerbox').innerHTML=st.err?`<p class="hinweis"><b>Letzter Fehler:</b> ${esc(st.err)}</p>`:'';
+  $('p-uebersicht').className='punkt '+(st.err?'schlecht':'gut');
+  $('z-uebersicht').textContent=st.last?'Aktualisiert '+st.last:'Noch keine Daten';
+  // WLAN
+  $('gespeichert').innerHTML=st.wifis.length?st.wifis.map((w,i)=>`<li><div class="text">${esc(w)}<small>${w===st.sta?'jetzt verbunden':(i===0?'zuletzt hinzugefügt':'gespeichert')}</small></div><button class="linkknopf rot" data-weg="${esc(w)}">Entfernen</button></li>`).join(''):'<li><div class="text">Noch kein Netz gespeichert.</div></li>';
+  $('gespeichert').querySelectorAll('[data-weg]').forEach(b=>b.onclick=async()=>{if(!confirm(`„${b.dataset.weg}“ entfernen?`))return;await api('/api/wifi/forget',{method:'POST',body:JSON.stringify({ssid:b.dataset.weg})});meld('Entfernt');lade()});
+  $('z-wlan').textContent=st.wifis.length===1?'1 Netz gespeichert':`${st.wifis.length} Netze gespeichert`;
+  $('p-wlan').className='punkt '+(st.sta?'gut':'schlecht');
+  // Konten
+  const msAn=s.ms_refresh, msDa=!!c.ms_client;
+  $('ms-status').innerHTML=!msDa?'Nicht eingerichtet':msAn?`<span class="gut">Angemeldet</span>`:'<span class="schlecht">Nicht angemeldet</span>';
+  $('ms-detail').textContent=msAn&&c.ms_user?c.ms_user:(!msDa?'Für die Anmeldung braucht das Display die Angaben deiner IT (unten).':'');
+  $('msAnmelden').hidden=!msDa||msAn;$('msAbmelden').hidden=!msAn;$('ms-hilfe').hidden=!msDa||msAn;$('ms-auswahl').hidden=!msAn;
+  $('ms_planner').checked=(c.ms_planner||'1')!=='0';
+  const gDa=s.g_key&&c.g_user;
+  $('g-status').innerHTML=gDa?(c.src_google==='0'?'Pausiert':'<span class="gut">Verbunden</span>'):'Nicht eingerichtet';
+  $('g-detail').textContent=gDa?`${c.g_user} · ${(c.g_cals||'').split('\n').filter(Boolean).length} Kalender`:'';
+  $('src_google').checked=c.src_google!=='0';$('src_google').disabled=!gDa;$('g-auswahl').hidden=!gDa;
+  $('t-status').innerHTML=s.td_token?(c.src_todoist==='0'?'Pausiert':'<span class="gut">Verbunden</span>'):'Nicht eingerichtet';
+  $('src_todoist').checked=c.src_todoist!=='0';$('src_todoist').disabled=!s.td_token;
+  const quellen=[msAn&&'Microsoft',gDa&&c.src_google!=='0'&&'Google',s.td_token&&c.src_todoist!=='0'&&'Todoist'].filter(Boolean);
+  $('z-konten').textContent=quellen.length?quellen.join(', '):'Noch keine Quelle';
+  $('p-konten').className='punkt '+(quellen.length?'gut':'schlecht');
+  for(const k of ['ms_client','ms_tenant','g_user','td_filter'])if(document.activeElement!==$(k))$(k).value=c[k]||'';
+  $('td_token').placeholder=s.td_token?'gespeichert, leer lassen zum Behalten':'';
+  // Anzeige
+  const takt=c.day_min||'10',sl=c.slots||'7';
+  document.querySelectorAll('input[name=day_min]').forEach(i=>i.checked=i.value===takt);
+  document.querySelectorAll('input[name=slots]').forEach(i=>i.checked=i.value===sl);
+  $('sleep_h').value=c.sleep_h||'23';$('wake_h').value=c.wake_h||'6';
+  $('q_over').value=c.q_over||'4';$('q_due').value=c.q_due||'2';$('q_dead').value=c.q_dead||'2';$('q_undat').value=c.q_undat||'1';
+  if(document.activeElement!==$('safe_bot'))$('safe_bot').value=c.safe_bot||'448';
+  $('z-anzeige').textContent=`${takt==='60'?'stündlich':'alle '+takt+' Min.'}, ${sl} Aufgaben`;
+  // Ort
+  const mode=c.loc_mode||'auto';document.querySelectorAll('input[name=loc_mode]').forEach(i=>i.checked=i.value===mode);ortsAnzeige(mode);
+  const tz=c.tz_home||'Europe/Berlin';if(!ZONEN.includes(tz))$('tz_home').insertAdjacentHTML('afterbegin',`<option>${esc(tz)}</option>`);$('tz_home').value=tz;
+  $('z-ort').textContent=mode==='fixed'?(c.loc_name||'Fester Ort'):'Automatisch'+(st.ort?', '+st.ort:'');
+  // Geraet
+  $('geraeteliste').innerHTML=`<dt>Version</dt><dd>${esc(st.version)}</dd><dt>Letztes Update</dt><dd>${esc(st.ota||'–')}</dd><dt>Geräte-WLAN</dt><dd>${esc(st.ap||'')}</dd>`;
+  $('ota_auto').checked=c.ota_auto!=='0';
+  $('z-geraet').textContent='Version '+st.version;
+}
+
+/* WLAN */
+function balken(rssi){const n=rssi>-55?4:rssi>-67?3:rssi>-78?2:1;return `<span class="balken" aria-label="Empfang ${n} von 4">${[1,2,3,4].map(i=>`<i class="${i<=n?'an':''}" style="height:${i*4}px"></i>`).join('')}</span>`}
+$('suchen').onclick=async()=>{$('suchen').disabled=true;$('suchen').textContent='Suche läuft …';
+  try{const j=await api('/api/scan');$('gefunden').innerHTML=j.length?j.map(n=>`<li><button class="linkknopf" style="flex:1;text-align:left;color:inherit" data-ssid="${esc(n.ssid)}">${balken(n.rssi)} <span style="margin-left:8px">${esc(n.ssid)}</span>${n.offen?' <small>(offen)</small>':''}</button></li>`).join(''):'<li>Keine Netze gefunden.</li>';
+    $('gefunden').querySelectorAll('[data-ssid]').forEach(b=>b.onclick=()=>{$('wlanform').hidden=false;$('w_ssid').value=b.dataset.ssid;$('w_pass').focus()})}
+  catch(e){meld(e.message)}$('suchen').disabled=false;$('suchen').textContent='Netze in der Nähe suchen'};
+$('vonHand').onclick=()=>{$('wlanform').hidden=false;$('w_ssid').value='';$('w_ssid').focus()};
+$('zeigen').onclick=()=>{const p=$('w_pass');p.type=p.type==='password'?'text':'password';$('zeigen').textContent=p.type==='password'?'Anzeigen':'Verbergen'};
+$('wlanSpeichern').onclick=async()=>{const ssid=$('w_ssid').value;if(!ssid){meld('Bitte ein Netz wählen');return}
+  try{await api('/api/wifi',{method:'POST',body:JSON.stringify({ssid,pass:$('w_pass').value})});$('w_pass').value='';$('wlanform').hidden=true;meld('Netz gespeichert');lade()}catch(e){meld(e.message)}};
+
+/* Kalender- und Listenauswahl */
+function auswahl(el,key,items,leer){const sel=(st.cfg[key]||'').split('\n');
+  $(el).innerHTML=items.length?`<ul class="liste">${items.map(c=>`<li><div class="text">${esc(c.name)}${c.primary?'<small>Hauptkalender</small>':''}${c.flagged?'<small>Gekennzeichnete E-Mails</small>':''}</div><label class="schalter"><input type="checkbox" value="${esc(c.id)}" ${sel.includes(c.id)?'checked':''}><span></span></label></li>`).join('')}</ul>`:`<p class="erkl">${leer}</p>`;
+  $(el).querySelectorAll('input').forEach(i=>i.onchange=()=>{const ids=[...$(el).querySelectorAll('input:checked')].map(x=>x.value);setze({[key]:ids.join('\n')},'Auswahl gespeichert')})}
+async function laden(knopf,el,pfad,key,leer){knopf.disabled=true;knopf.textContent='Lädt …';try{auswahl(el,key,await api(pfad),leer)}catch(e){$(el).innerHTML=`<p class="hinweis">${esc(e.message)}</p>`}}
+$('gKalLaden').onclick=()=>laden($('gKalLaden'),'gcals','/api/cals','g_cals','Keine Kalender gefunden.');
+$('msKalLaden').onclick=()=>laden($('msKalLaden'),'mscals','/api/mscals','ms_cals','Keine Kalender gefunden.');
+$('msListenLaden').onclick=()=>laden($('msListenLaden'),'mslists','/api/mslists','ms_lists','Keine Listen gefunden.');
+$('gfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{await api('/api/google-key',{method:'POST',body:await f.text()});meld('Schlüssel gespeichert');lade()}catch(err){meld(err.message)}};
+$('msAnmelden').onclick=async()=>{await setze({ms_now:'1'},'Anmeldung startet, wenn du auf „Fertig“ tippst')};
+$('msAbmelden').onclick=async()=>{if(!confirm('Microsoft-Konto vom Display abmelden?'))return;await api('/api/mslogout',{method:'POST'});meld('Abgemeldet');lade()};
+
+/* Ort suchen */
+$('ortSuchen').onclick=async()=>{const q=$('ortq').value.trim();if(!q)return;$('orte').innerHTML='<li>Suche …</li>';
+  try{const j=await api('/api/geocode?q='+encodeURIComponent(q));$('orte').innerHTML=j.length?j.map((o,i)=>`<li><div class="text">${esc(o.name)}<small>${esc([o.region,o.land].filter(Boolean).join(', '))}</small></div><button class="neben" data-i="${i}">Wählen</button></li>`).join(''):'<li>Nichts gefunden. Anders schreiben?</li>';
+    $('orte').querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const o=j[b.dataset.i];setze({loc_mode:'fixed',loc_name:o.name,loc_lat:String(o.lat),loc_lon:String(o.lon)},'Ort gespeichert: '+o.name)})}
+  catch(e){$('orte').innerHTML=`<li class="schlecht">${esc(e.message)}</li>`}};
+$('ortq').onkeydown=e=>{if(e.key==='Enter')$('ortSuchen').click()};
+
+/* Geraet */
+$('otaJetzt').onclick=async()=>{await api('/api/ota',{method:'POST'});meld('Wird geprüft, wenn du auf „Fertig“ tippst')};
+$('fertig').onclick=async()=>{try{await api('/api/done',{method:'POST'})}catch(e){}
+  document.body.innerHTML='<header><h1>Fertig</h1><p>Das Display aktualisiert sich jetzt. Du kannst dieses Fenster schließen und dein Handy wieder mit deinem WLAN verbinden.</p></header>'};
+
+zeige((location.hash||'#uebersicht').slice(1));
+lade().catch(e=>{$('kopfzeile').textContent='Keine Verbindung zum Display. Bist du mit dem WLAN des Displays verbunden?'});
+bild();
+</script>
+</body>
+</html>

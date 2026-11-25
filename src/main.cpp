@@ -100,6 +100,24 @@ static void fmtStamp(time_t t, char *out, int n) {
   snprintf(out, n, "%d.%d. %02d:%02d", lt.tm_mday, lt.tm_mon + 1, lt.tm_hour, lt.tm_min);
 }
 
+// ---------- Fuer das Webinterface ----------
+
+int portalBatteryPercent() { return batteryPercent(batteryVoltage()); }
+
+void portalRenderScreen(uint8_t *buf) {
+  static Model m;
+  buildModel(raw, time(nullptr), quotas(), m);
+  snprintf(m.place, sizeof(m.place), "%s", raw.place);
+  if (raw.fetchedAt) {
+    struct tm lt;
+    time_t t = (time_t)raw.fetchedAt;
+    localtime_r(&t, &lt);
+    snprintf(m.stand, sizeof(m.stand), "%02d:%02d", lt.tm_hour, lt.tm_min);
+  }
+  Canvas c(buf);
+  renderDashboard(c, m, layoutOptions());
+}
+
 // ---------- Anzeige ----------
 
 static void showModel(bool force) {
@@ -514,6 +532,10 @@ void setup() {
     if (ssid.length()) net::syncTime();
     showSetupScreen(minutes);
     portal::run(minutes * 60000UL, 3 * 60000UL, true);
+    if (cfg::getInt("ms_now", 0) == 1) {  // im Webinterface auf "Am Display anmelden" getippt
+      cfg::remove("ms_now");
+      wantMsLogin = true;
+    }
   }
 
   String ssid = net::connect();

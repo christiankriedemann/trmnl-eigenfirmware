@@ -7,9 +7,14 @@
 
 #include "config.h"
 #include "net.h"
+#include "canvas.h"
 #include "portal_page.h"
 #include "microsoft.h"
 #include "sources.h"
+
+// Von main bereitgestellt: Ladezustand und Vorschau des Dashboards
+int portalBatteryPercent();
+void portalRenderScreen(uint8_t *buf);
 
 namespace portal {
 
@@ -21,12 +26,14 @@ static bool saved = false, finished = false;
 static const char *ALLOWED[] = {"g_user", "g_cals", "g_tasks", "td_token", "td_filter", "tz_home", "loc_mode",
                                 "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead", "q_undat",
                                 "day_min", "night_min", "wake_h", "sleep_h", "safe_bot", "show_home", "ms_client",
-                                "ms_tenant", "ms_cals", "ms_lists", "ms_planner"};
+                                "ms_tenant", "ms_cals", "ms_lists", "ms_planner", "src_google", "src_todoist",
+                                "ota_auto", "ms_now"};
 // Schluessel, die das Webinterface lesen darf (keine Geheimnisse)
 static const char *READABLE[] = {"g_user", "g_email", "g_cals", "g_tasks", "td_filter", "tz_home", "loc_mode",
                                  "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead",
                                  "q_undat", "day_min", "night_min", "wake_h", "sleep_h", "safe_bot", "show_home",
-                                 "ms_client", "ms_tenant", "ms_user", "ms_cals", "ms_lists", "ms_planner"};
+                                 "ms_client", "ms_tenant", "ms_user", "ms_cals", "ms_lists", "ms_planner",
+                                 "src_google", "src_todoist", "ota_auto"};
 
 String apSsid() {
   uint8_t mac[6];
@@ -83,6 +90,9 @@ static void handleState() {
   d["last"] = cfg::get("last_ok");
   d["err"] = cfg::get("last_err");
   d["ota"] = cfg::get("ota_last");
+  d["akku"] = portalBatteryPercent();
+  d["ap"] = apSsid();
+  d["ort"] = cfg::get("loc_mode", "auto") == "fixed" ? cfg::get("loc_name") : cfg::get("c_place");
   JsonObject c = d["cfg"].to<JsonObject>();
   for (const char *k : READABLE) c[k] = cfg::get(k);
   JsonObject s = d["secrets"].to<JsonObject>();
@@ -167,19 +177,79 @@ static void handleForget() {
 static void handleScan() {
   if (!allowed(false)) return;
   touch();
-  int n = WiFi.scanNetworks(false, false, false, 120);
+  int n = WiFi.scanNetworks(false, false, false, 150);
   JsonDocument d;
   JsonArray a = d.to<JsonArray>();
   for (int i = 0; i < n; i++) {
-    String s = WiFi.SSID(i);
-    if (!s.length()) continue;
+    String ssid = WiFi.SSID(i);
+    if (!ssid.length()) continue;
     bool dup = false;
-    for (JsonVariant v : a)
-      if (v.as<String>() == s) dup = true;
-    if (!dup) a.add(s);
+    for (JsonObject v : a)
+      if (v["ssid"].as<String>() == ssid) dup = true;
+    if (dup) continue;  // Liste ist nach Empfang sortiert, der staerkste bleibt
+    JsonObject o = a.add<JsonObject>();
+    o["ssid"] = ssid;
+    o["rssi"] = WiFi.RSSI(i);
+    o["offen"] = WiFi.encryptionType(i) == WIFI_AUTH_OPEN;
   }
   WiFi.scanDelete();
   sendJson(200, d);
+}
+
+// Ortssuche ueber das Geraet (das Handy hat im Geraete-WLAN kein Internet)
+static void handleGeocode() {
+  if (!allowed(false)) return;
+  touch();
+  if (WiFi.status() != WL_CONNECTED) return sendError(503, "Das Display ist gerade mit keinem WLAN verbunden.");
+  String q = server->arg("q");
+  q.trim();
+  if (!q.length() || q.length() > 60) return sendError(400, "Bitte einen Ortsnamen eingeben.");
+  JsonDocument filter;
+  JsonObject it = filter["results"].add<JsonObject>();
+  for (const char *k : {"name", "admin1", "country", "latitude", "longitude"}) it[k] = true;
+  JsonDocument doc;
+  int code = net::getJson("https://geocoding-api.open-meteo.com/v1/search?count=6&language=de&name=" + net::urlEncode(q),
+                          doc, &filter);
+  if (code != 200) return sendError(502, "Die Ortssuche ist gerade nicht erreichbar.");
+  JsonDocument out;
+  JsonArray a = out.to<JsonArray>();
+  for (JsonObject r : doc["results"].as<JsonArray>()) {
+    JsonObject o = a.add<JsonObject>();
+    o["name"] = r["name"];
+    o["region"] = r["admin1"];
+    o["land"] = r["country"];
+    o["lat"] = r["latitude"];
+    o["lon"] = r["longitude"];
+  }
+  sendJson(200, out);
+}
+
+// Vorschau: Dashboard aus den gespeicherten Daten als 1-Bit-BMP (800 x 480)
+static void handleScreen() {
+  if (!allowed(false)) return;
+  touch();
+  static uint8_t buf[CANVAS_BYTES];
+  portalRenderScreen(buf);
+  const uint32_t rowBytes = CANVAS_W / 8, dataSize = rowBytes * CANVAS_H, off = 62, fileSize = off + dataSize;
+  uint8_t h[62] = {'B', 'M'};
+  auto le32 = [&](int at, uint32_t v) { for (int i = 0; i < 4; i++) h[at + i] = (v >> (8 * i)) & 0xFF; };
+  le32(2, fileSize);
+  le32(10, off);
+  le32(14, 40);
+  le32(18, CANVAS_W);
+  le32(22, CANVAS_H);
+  h[26] = 1;   // Ebenen
+  h[28] = 1;   // 1 Bit je Pixel
+  le32(34, dataSize);
+  le32(46, 2);  // Farben in der Palette
+  // Palette: 0 = schwarz, 1 = weiss (wie der Bildpuffer)
+  h[54] = 0; h[55] = 0; h[56] = 0; h[57] = 0;
+  h[58] = 255; h[59] = 255; h[60] = 255; h[61] = 0;
+  server->setContentLength(fileSize);
+  server->sendHeader("Cache-Control", "no-store");
+  server->send(200, "image/bmp", "");
+  server->sendContent((const char *)h, sizeof(h));
+  for (int y = CANVAS_H - 1; y >= 0; y--) server->sendContent((const char *)buf + y * rowBytes, rowBytes);  // BMP: von unten
 }
 
 static void handleGoogleKey() {
@@ -281,8 +351,12 @@ Result run(uint32_t firstMs, uint32_t afterSaveMs, bool keepSta) {
   web.on("/", HTTP_GET, [] {
     if (!allowed(false)) return;
     touch();
-    server->send(200, "text/html; charset=utf-8", PORTAL_HTML);
+    server->sendHeader("Content-Encoding", "gzip");
+    server->sendHeader("Cache-Control", "no-store");
+    server->send_P(200, "text/html; charset=utf-8", (const char *)PORTAL_HTML_GZ, PORTAL_HTML_GZ_LEN);
   });
+  web.on("/api/screen", HTTP_GET, handleScreen);
+  web.on("/api/geocode", HTTP_GET, handleGeocode);
   web.on("/api/state", HTTP_GET, handleState);
   web.on("/api/set", HTTP_POST, handleSet);
   web.on("/api/wifi", HTTP_POST, handleWifi);

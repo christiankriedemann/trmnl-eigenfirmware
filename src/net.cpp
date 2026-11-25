@@ -3,6 +3,7 @@
 #include <HTTPClient.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include <esp_sntp.h>
 
 #include "config.h"
 
@@ -55,10 +56,20 @@ String connect(uint32_t timeoutMs) {
 }
 
 bool syncTime(uint32_t timeoutMs) {
+  // Auf die echte Synchronisation warten, nicht nur auf "Uhr nicht mehr 1970": nach einem
+  // Neustart ohne WLAN steht die Uhr auf einer Naeherung (letzte Synchronisation).
+  // Die Uhr laeuft im Tiefschlaf weiter; abgleichen nach Neustart und dann alle 6 Stunden.
+  RTC_DATA_ATTR static int64_t lastSync = 0;
+  time_t now = time(nullptr);
+  if (lastSync > 0 && now > lastSync && now - lastSync < 6 * 3600) return true;
+  bool synced;
+  sntp_set_sync_status(SNTP_SYNC_STATUS_RESET);
   configTime(0, 0, "pool.ntp.org", "time.google.com", "time.cloudflare.com");
   uint32_t t0 = millis();
-  while (time(nullptr) < 1700000000 && millis() - t0 < timeoutMs) delay(100);
-  return time(nullptr) >= 1700000000;
+  while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED && millis() - t0 < timeoutMs) delay(100);
+  synced = sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED;
+  if (synced) lastSync = time(nullptr);
+  return synced;
 }
 
 void off() {

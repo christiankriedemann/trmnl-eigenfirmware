@@ -20,13 +20,15 @@ cp .pio/build/trmnl_og/firmware.bin "$D/firmware.bin"
 SIZE=$(stat -f%z "$D/firmware.bin")
 SHA=$(shasum -a 256 "$D/firmware.bin" | cut -d' ' -f1)
 
-# Signieren: Schluessel nur im Speicher (Umgebungsvariable aus Infisical)
+# Signiert wird "trmnl-ota\n<version>\n<sha256>": Version und Abbild zusammen (kein Downgrade)
+printf 'trmnl-ota\n%s\n%s' "$VERSION" "$SHA" > "$D/signiert.txt"
+# Schluessel nur im Speicher (Umgebungsvariable aus Infisical)
 source ~/dev/claude-code/infisical.sh
-ck_run TRMNL -- bash -c 'openssl dgst -sha256 -sign <(printf "%s\n" "$OTA_SIGNING_KEY") -out "'"$D"'/firmware.sig" "'"$D"'/firmware.bin"' 2>/dev/null
-openssl dgst -sha256 -verify tools/ota_public.pem -signature "$D/firmware.sig" "$D/firmware.bin" | grep -q "Verified OK" \
+ck_run TRMNL -- bash -c 'openssl dgst -sha256 -sign <(printf "%s\n" "$OTA_SIGNING_KEY") -out "'"$D"'/firmware.sig" "'"$D"'/signiert.txt"' 2>/dev/null
+openssl dgst -sha256 -verify tools/ota_public.pem -signature "$D/firmware.sig" "$D/signiert.txt" | grep -q "Verified OK" \
   || { echo "Signatur passt nicht zum oeffentlichen Schluessel"; exit 1; }
 SIG=$(base64 < "$D/firmware.sig" | tr -d '\n')
-rm "$D/firmware.sig"
+rm "$D/firmware.sig" "$D/signiert.txt"
 
 cat > "$D/manifest.json" <<EOF
 {"version":"$VERSION","url":"https://github.com/$REPO/releases/download/v$VERSION/firmware.bin","size":$SIZE,"sha256":"$SHA","sig":"$SIG"}

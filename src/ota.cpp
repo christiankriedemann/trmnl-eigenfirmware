@@ -47,7 +47,12 @@ static bool hexToBytes(const char *hex, uint8_t *out, size_t n) {
   return true;
 }
 
-static bool verifySignature(const uint8_t hash[32], const String &sigB64, String &err) {
+// Signiert ist die Nachricht "trmnl-ota\n<version>\n<sha256 hex>": damit ist auch die
+// Versionsnummer geschuetzt (keine aeltere, echt signierte Firmware als "neu" unterschiebbar).
+static bool verifySignature(const String &version, const char *shaHex, const String &sigB64, String &err) {
+  String msg = "trmnl-ota\n" + version + "\n" + shaHex;
+  uint8_t hash[32];
+  mbedtls_sha256((const uint8_t *)msg.c_str(), msg.length(), hash, 0);
   uint8_t sig[160];
   size_t sigLen = 0;
   if (mbedtls_base64_decode(sig, sizeof(sig), &sigLen, (const uint8_t *)sigB64.c_str(), sigB64.length())) {
@@ -68,7 +73,8 @@ static bool verifySignature(const uint8_t hash[32], const String &sigB64, String
   return ok;
 }
 
-static bool install(const String &url, size_t size, const uint8_t expected[32], const String &sig, String &err) {
+static bool install(const String &url, size_t size, const uint8_t expected[32], const String &version,
+                    const char *shaHex, const String &sig, String &err) {
   WiFiClientSecure client;
   client.setCACertBundle(x509_crt_bundle_start);
   client.setTimeout(20);
@@ -113,7 +119,7 @@ static bool install(const String &url, size_t size, const uint8_t expected[32], 
     return false;
   }
   if (memcmp(hash, expected, 32)) { err = "Pruefsumme falsch"; Update.abort(); return false; }
-  if (!verifySignature(hash, sig, err)) { Update.abort(); return false; }
+  if (!verifySignature(version, shaHex, sig, err)) { Update.abort(); return false; }
   if (!Update.end(true)) { err = "Abschluss: " + String(Update.errorString()); return false; }
   return true;
 }
@@ -132,10 +138,17 @@ Result check(bool force, void (*progress)(const String &version)) {
   if (!r.version.length() || cmpVersion(r.version, EIGEN_FIRMWARE_VERSION) <= 0) return r;
   r.available = true;
   uint8_t expected[32];
-  if (!hexToBytes(doc["sha256"] | "", expected, 32)) { r.error = "Versionsdatei fehlerhaft"; return r; }
-  if (progress) progress(r.version);
+  const char *shaHex = doc["sha256"] | "";
+  if (!hexToBytes(shaHex, expected, 32)) { r.error = "Versionsdatei fehlerhaft"; return r; }
+  // Signatur vor dem Download pruefen: spart den Download bei manipulierter Versionsdatei
   String err;
-  r.installed = install(doc["url"] | "", doc["size"] | 0, expected, doc["sig"] | "", err);
+  if (!verifySignature(r.version, shaHex, doc["sig"] | "", err)) {
+    r.error = err;
+    cfg::set("ota_last", "Update " + r.version + ": " + err);
+    return r;
+  }
+  if (progress) progress(r.version);
+  r.installed = install(doc["url"] | "", doc["size"] | 0, expected, r.version, shaHex, doc["sig"] | "", err);
   r.error = err;
   cfg::set("ota_last", r.installed ? "Version " + r.version + " eingespielt" : "Update " + r.version + ": " + err);
   return r;

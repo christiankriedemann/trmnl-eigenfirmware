@@ -104,6 +104,9 @@ static void pickTasks(const RawData &raw, int32_t today, const TaskQuotas &q, Mo
   static Ranked all[MAX_RAW_TASKS];
   int n = 0;
   for (int i = 0; i < raw.nTasks; i++) {
+    const char *t = raw.tasks[i].title;
+    while (*t == ' ') t++;
+    if (!*t) continue;  // nur Leerzeichen: nicht anzeigen
     all[n].idx = i;
     all[n].tier = tierOf(raw.tasks[i], today, all[n].dateKey);
     n++;

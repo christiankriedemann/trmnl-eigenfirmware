@@ -137,6 +137,7 @@ static void drawTasks(Canvas &c, const Model &m, int bottom) {
     const Task &k = m.tasks[t];
     TextLine l[4];
     int n = wrapText(inter18m, k.title, TASK_W, l, 4);
+    if (n == 0) continue;  // leerer Titel
     char due[24] = "";
     int dueW = 0;
     if (k.due[0]) {

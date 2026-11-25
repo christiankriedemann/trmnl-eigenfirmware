@@ -105,7 +105,7 @@ static void fmtStamp(time_t t, char *out, int n) {
 int portalBatteryPercent() { return batteryPercent(batteryVoltage()); }
 
 void portalRenderScreen(uint8_t *buf) {
-  static Model m;
+  Model &m = model;  // vorhandenes Modell nutzen statt ein zweites anzulegen (Arbeitsspeicher)
   buildModel(raw, time(nullptr), quotas(), m);
   snprintf(m.place, sizeof(m.place), "%s", raw.place);
   if (raw.fetchedAt) {
@@ -116,6 +116,7 @@ void portalRenderScreen(uint8_t *buf) {
   }
   Canvas c(buf);
   renderDashboard(c, m, layoutOptions());
+  // Das Panel bleibt unberuehrt; die Teilaktualisierung vergleicht mit dem Bild im Flash.
 }
 
 // ---------- Anzeige ----------

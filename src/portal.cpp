@@ -8,6 +8,7 @@
 #include "config.h"
 #include "net.h"
 #include "canvas.h"
+#include "display.h"
 #include "portal_page.h"
 #include "microsoft.h"
 #include "sources.h"
@@ -228,7 +229,9 @@ static void handleGeocode() {
 static void handleScreen() {
   if (!allowed(false)) return;
   touch();
-  static uint8_t buf[CANVAS_BYTES];
+  // In den vorhandenen Bildspeicher zeichnen: ein zweiter Puffer kostet 48 KB Arbeitsspeicher,
+  // die sonst der TLS-Verbindung fuer Updates fehlen. Das Panel selbst aendert sich dadurch nicht.
+  uint8_t *buf = display::buffer();
   portalRenderScreen(buf);
   const uint32_t rowBytes = CANVAS_W / 8, dataSize = rowBytes * CANVAS_H, off = 62, fileSize = off + dataSize;
   uint8_t h[62] = {'B', 'M'};

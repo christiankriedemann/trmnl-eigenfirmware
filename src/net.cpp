@@ -74,6 +74,7 @@ static int request(const char *method, const String &url, const String *body, co
   client.setTimeout(15);
   HTTPClient http;
   http.useHTTP10(true);  // keine Chunked-Antworten, damit der Stream direkt lesbar ist
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);  // z. B. GitHub-Release -> Speicher
   http.setTimeout(15000);
   http.setUserAgent(USER_AGENT);
   if (!http.begin(client, url)) return -1;

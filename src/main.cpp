@@ -527,6 +527,12 @@ void setup() {
   LittleFS.begin(true);
   loadCache();
   applyZone();
+  // Nach einem Neustart ohne WLAN kennt das Geraet die Uhrzeit nicht (1970). Dann den Zeitpunkt
+  // der letzten Synchronisation als Naeherung nehmen, damit Tage und Termine stimmen.
+  if (time(nullptr) < 1700000000 && raw.fetchedAt > 1700000000) {
+    struct timeval tv = {(time_t)raw.fetchedAt, 0};
+    settimeofday(&tv, nullptr);
+  }
 
   // Akku fast leer: Hinweis zeigen, kein WLAN, stuendlich nachsehen, ob geladen wird
   {

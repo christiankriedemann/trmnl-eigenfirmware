@@ -51,12 +51,30 @@ static void drawDayHeader(Canvas &c, const Day &d, int x) {
 
   if (d.hasWeather) {
     // Wettertext unten, darueber Symbol und Temperatur (wie margin-top:auto)
+    // Passt der Text nicht, zuerst das vordere Wort abkuerzen ("Ueberw. bewoelkt"),
+    // damit das Entscheidende lesbar bleibt; erst danach kuerzt der Umbruch mit "…".
+    char wt[40];
+    snprintf(wt, sizeof(wt), "%s", d.weatherText);
+    if (textWidth(inter15b, wt) > COL_W) {
+      static const char *LANG[][2] = {{"\xC3\x9C" "berwiegend ", "\xC3\x9C" "berw. "}, {"Teilweise ", "Teilw. "},
+                                      {"Leichter ", "Leicht. "}, {"Leichte ", "Leicht. "}, {"Starker ", "Stark. "},
+                                      {"Heftige ", "Heft. "}, {"Gefrierender ", "Gefr. "}};
+      for (auto &p : LANG) {
+        size_t n = strlen(p[0]);
+        if (!strncmp(wt, p[0], n)) {
+          char rest[40];
+          snprintf(rest, sizeof(rest), "%s", wt + n);
+          snprintf(wt, sizeof(wt), "%s%s", p[1], rest);
+          break;
+        }
+      }
+    }
     TextLine wl[1];
-    int n = wrapText(inter15b, d.weatherText, COL_W, wl, 1);
+    int n = wrapText(inter15b, wt, COL_W, wl, 1);
     float textBottom = HEADER_LINE_Y - 4 - 1;
     float lh = 15 * 1.15f;
     float textTop = textBottom - n * lh;
-    for (int i = 0; i < n; i++) drawLine(c, inter15b, x, baselineFor(inter15b, textTop + i * lh, lh), d.weatherText, wl[i]);
+    for (int i = 0; i < n; i++) drawLine(c, inter15b, x, baselineFor(inter15b, textTop + i * lh, lh), wt, wl[i]);
     float tempBottom = textTop - 4;
     float tempTop = tempBottom - 26;
     int tb = baselineFor(inter26b, tempTop, 26);

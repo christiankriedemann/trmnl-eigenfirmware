@@ -42,6 +42,13 @@ bool show(bool full) {
     File f = LittleFS.open(LAST_FILE, "r");
     partial = old && f && f.read(old, CANVAS_BYTES) == CANVAS_BYTES;
     if (f) f.close();
+    if (partial) {
+      // Grosse Flaechen (z. B. der schwarze Hinweisbalken) werden bei der Teilaktualisierung
+      // nur grau und streifig: ab 8 % geaenderter Bildpunkte gruendlich aktualisieren.
+      uint32_t changed = 0;
+      for (int i = 0; i < CANVAS_BYTES; i++) changed += __builtin_popcount((uint8_t)(old[i] ^ frame[i]));
+      if (changed > (uint32_t)CANVAS_W * CANVAS_H * 8 / 100) partial = false;
+    }
   }
   if (partial) {
     bbep.setBuffer(old);

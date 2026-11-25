@@ -131,8 +131,17 @@ Result check(bool force, void (*progress)(const String &version)) {
   if (!force && now - cfg::getInt("ota_at", 0) < 86400) return r;
   cfg::setInt("ota_at", (int)now);
   JsonDocument doc;
-  int code = net::getJson(cfg::get("ota_url", DEFAULT_MANIFEST), doc);
-  if (code != 200) { r.error = "Versionsdatei " + String(code); return r; }
+  int code = -1;
+  for (int attempt = 0; attempt < 3 && code != 200; attempt++) {  // Mobilfunk-Hotspots haken gern kurz
+    if (attempt) delay(2000);
+    doc.clear();
+    code = net::getJson(cfg::get("ota_url", DEFAULT_MANIFEST), doc);
+  }
+  if (code != 200) {
+    r.error = "Versionsdatei " + String(code);
+    cfg::setInt("ota_at", 0);  // beim naechsten Lauf erneut versuchen statt erst morgen
+    return r;
+  }
   r.checked = true;
   r.version = (const char *)(doc["version"] | "");
   if (!r.version.length() || cmpVersion(r.version, EIGEN_FIRMWARE_VERSION) <= 0) return r;

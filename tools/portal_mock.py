@@ -16,8 +16,8 @@ STATE = {
     "wifis": ["Zuhause", "Handy-Hotspot"],
     "cfg": {"g_user": "name@firma.de", "g_email": "display@projekt.iam.gserviceaccount.com",
             "g_cals": "name@firma.de", "tz_home": "Europe/Berlin", "loc_mode": "auto", "day_min": "10",
-            "slots": "7", "sleep_h": "23", "wake_h": "6", "safe_bot": "456", "ms_client": "", "ota_auto": "1"},
-    "secrets": {"g_key": True, "td_token": True, "ms_refresh": False},
+            "slots": "7", "sleep_h": "23", "wake_h": "6", "safe_bot": "456", "ms_client": "abc", "ms_user": "name@firma.de", "ota_auto": "1"},
+    "secrets": {"g_key": True, "td_token": True, "ms_refresh": True},
 }
 
 

@@ -28,13 +28,13 @@ static const char *ALLOWED[] = {"g_user", "g_cals", "g_tasks", "td_token", "td_f
                                 "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead", "q_undat",
                                 "day_min", "night_min", "wake_h", "sleep_h", "safe_bot", "show_home", "ms_client",
                                 "ms_tenant", "ms_cals", "ms_lists", "ms_planner", "src_google", "src_todoist",
-                                "ota_auto", "ms_now", "voll_alle"};
+                                "ota_auto", "ms_now", "voll_alle", "ms_shared"};
 // Schluessel, die das Webinterface lesen darf (keine Geheimnisse)
 static const char *READABLE[] = {"g_user", "g_email", "g_cals", "g_tasks", "td_filter", "tz_home", "loc_mode",
                                  "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead",
                                  "q_undat", "day_min", "night_min", "wake_h", "sleep_h", "safe_bot", "show_home",
                                  "ms_client", "ms_tenant", "ms_user", "ms_cals", "ms_lists", "ms_planner",
-                                 "src_google", "src_todoist", "ota_auto", "voll_alle"};
+                                 "src_google", "src_todoist", "ota_auto", "voll_alle", "ms_shared"};
 
 String apSsid() {
   uint8_t mac[6];
@@ -135,6 +135,12 @@ static void handleSet() {
     String v = kv.value().as<String>();
     v.trim();
     if (!validValue(kv.key().c_str(), v)) continue;
+    // Andere Microsoft-Berechtigung: alte Anmeldung passt nicht mehr, neu anmelden am Display
+    if (!strcmp(kv.key().c_str(), "ms_shared") && v != cfg::get("ms_shared", "0") && cfg::has("ms_refresh")) {
+      cfg::remove("ms_refresh");
+      cfg::remove("ms_cals");
+      cfg::setInt("ms_now", 1);
+    }
     if (v.length()) cfg::set(kv.key().c_str(), v);
     else cfg::remove(kv.key().c_str());
   }

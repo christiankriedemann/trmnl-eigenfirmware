@@ -6,7 +6,13 @@
 
 namespace ms {
 
-static const char *SCOPES = "offline_access%20Calendars.ReadBasic%20Tasks.Read%20User.Read";
+// Standard: nur eigene Kalender, nur Betreff und Zeiten (Calendars.ReadBasic).
+// Mit ms_shared = 1 auch Kalender, die andere freigegeben haben (Calendars.Read.Shared;
+// diese Berechtigung umfasst Termindetails, daher nur auf ausdruecklichen Wunsch).
+static String scopes() {
+  return cfg::getInt("ms_shared", 0) ? "offline_access%20Calendars.Read.Shared%20Tasks.Read%20User.Read"
+                                     : "offline_access%20Calendars.ReadBasic%20Tasks.Read%20User.Read";
+}
 static const char *GRAPH = "https://graph.microsoft.com/v1.0";
 
 // Zugriffstoken: kann ueber 3 KB lang sein (z. B. mit Gruppenangaben). Im RTC-Speicher
@@ -62,7 +68,7 @@ static const char *accessToken(String &err) {
   if (tokenExp > now + 120 && rtcToken[0]) return rtcToken;
   String rt = cfg::get("ms_refresh");
   if (!rt.length()) { err = "Microsoft nicht angemeldet"; return nullptr; }
-  String body = "client_id=" + net::urlEncode(cfg::get("ms_client")) + "&grant_type=refresh_token&scope=" + SCOPES +
+  String body = "client_id=" + net::urlEncode(cfg::get("ms_client")) + "&grant_type=refresh_token&scope=" + scopes() +
                 "&refresh_token=" + net::urlEncode(rt);
   JsonDocument filter;
   filter["access_token"] = true;
@@ -86,7 +92,7 @@ static const char *accessToken(String &err) {
 }
 
 bool startLogin(DeviceLogin &dl, String &err) {
-  String body = "client_id=" + net::urlEncode(cfg::get("ms_client")) + "&scope=" + SCOPES;
+  String body = "client_id=" + net::urlEncode(cfg::get("ms_client")) + "&scope=" + scopes();
   JsonDocument doc;
   int code = net::postJson(authBase() + "devicecode", body, "application/x-www-form-urlencoded", doc);
   if (code != 200) {
@@ -326,15 +332,21 @@ bool calendarList(String &jsonOut, String &err) {
   it["id"] = true;
   it["name"] = true;
   it["isDefaultCalendar"] = true;
+  it["owner"]["name"] = true;
+  it["owner"]["address"] = true;
   JsonDocument doc;
-  int code = net::getJson(String(GRAPH) + "/me/calendars?$select=id,name,isDefaultCalendar&$top=50", doc, &filter, tok);
+  int code = net::getJson(String(GRAPH) + "/me/calendars?$select=id,name,isDefaultCalendar,owner&$top=50", doc, &filter, tok);
   if (code != 200) { err = "Kalenderliste " + String(code); return false; }
   JsonDocument out;
   JsonArray arr = out.to<JsonArray>();
   for (JsonObject c : doc["value"].as<JsonArray>()) {
     JsonObject o = arr.add<JsonObject>();
     o["id"] = c["id"];
-    o["name"] = c["name"];
+    String name = c["name"] | "";
+    // Freigegebene Kalender: Besitzer dazuschreiben, damit "Kalender" nicht dreimal gleich heisst
+    String owner = c["owner"]["address"] | "";
+    if (owner.length() && !owner.equalsIgnoreCase(cfg::get("ms_user"))) name += " (" + String((const char *)(c["owner"]["name"] | owner.c_str())) + ")";
+    o["name"] = name;
     o["primary"] = c["isDefaultCalendar"] | false;
   }
   serializeJson(out, jsonOut);

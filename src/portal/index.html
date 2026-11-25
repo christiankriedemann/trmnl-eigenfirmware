@@ -190,7 +190,8 @@ summary{cursor:pointer;font-weight:600;padding:8px 0}
     <div id="ms-auswahl" hidden>
       <div class="feld"><label>Kalender</label><p class="erkl">Ohne Auswahl zeigt das Display deinen Hauptkalender.</p><div id="mscals"><button class="neben" id="msKalLaden">Kalender anzeigen</button></div></div>
       <div class="feld"><label>To-Do-Listen</label><p class="erkl">Ohne Auswahl werden alle Listen gezeigt, au&szlig;er &bdquo;Gekennzeichnete E-Mails&ldquo;.</p><div id="mslists"><button class="neben" id="msListenLaden">Listen anzeigen</button></div></div>
-      <ul class="liste"><li><div class="text">Planner-Aufgaben zeigen<small>Aufgaben, die dir in Planner zugewiesen sind.</small></div><label class="schalter"><input type="checkbox" id="ms_planner"><span></span></label></li></ul>
+      <ul class="liste"><li><div class="text">Planner-Aufgaben zeigen<small>Aufgaben, die dir in Planner zugewiesen sind.</small></div><label class="schalter"><input type="checkbox" id="ms_planner"><span></span></label></li>
+        <li><div class="text">Freigegebene Kalender<small>Auch Kalender, die Kolleginnen und Kollegen f&uuml;r dich freigegeben haben. Dabei darf das Display Termindetails lesen. Nach dem Einschalten meldest du dich einmal neu am Display an.</small></div><label class="schalter"><input type="checkbox" id="ms_shared"><span></span></label></li></ul>
     </div>
     <details><summary>F&uuml;r Fortgeschrittene: App-Registrierung</summary>
       <p class="erkl">Diese beiden Angaben bekommst du von deiner IT. Sie stehen in Entra bei der App &bdquo;TRMNL Display&ldquo;.</p>
@@ -320,6 +321,9 @@ const ZONEN=['Europe/Berlin','Europe/Amsterdam','Europe/Vienna','Europe/Zurich',
 $('tz_home').innerHTML=ZONEN.map(z=>`<option>${z}</option>`).join('');
 $('tz_home').onchange=()=>setze({tz_home:$('tz_home').value});
 document.querySelectorAll('input[name=loc_mode]').forEach(i=>i.onchange=()=>{ortsAnzeige(i.value);setze({loc_mode:i.value})});
+$('ms_shared').onchange=()=>{const an=$('ms_shared').checked;
+  if(!confirm(an?'Freigegebene Kalender einschalten? Danach meldest du dich am Display neu an. Deine IT muss dafuer die Berechtigung \u201eCalendars.Read.Shared\u201c freigegeben haben.':'Freigegebene Kalender ausschalten? Danach meldest du dich am Display neu an.')){$('ms_shared').checked=!an;return}
+  setze({ms_shared:an?'1':'0'},'Gespeichert. Die Anmeldung startet, wenn du auf \u201eFertig\u201c tippst')};
 for(const id of ['src_google','src_todoist','ms_planner','ota_auto'])$(id).onchange=()=>setze({[id]:$(id).checked?'1':'0'},$(id).checked?'Eingeschaltet':'Ausgeschaltet');
 document.querySelectorAll('[data-speichern]').forEach(b=>b.onclick=()=>{const o={};for(const k of b.dataset.speichern.split(',')){const e=$(k);if(e.type==='password'&&!e.value)continue;o[k]=e.value.trim()}setze(o)});
 
@@ -350,6 +354,7 @@ async function lade(){
   $('ms-detail').textContent=msAn&&c.ms_user?c.ms_user:(!msDa?'Für die Anmeldung braucht das Display die Angaben deiner IT (unten).':'');
   $('msAnmelden').hidden=!msDa||msAn;$('msAbmelden').hidden=!msAn;$('ms-hilfe').hidden=!msDa||msAn;$('ms-auswahl').hidden=!msAn;
   $('ms_planner').checked=(c.ms_planner||'1')!=='0';
+  $('ms_shared').checked=c.ms_shared==='1';
   const gDa=s.g_key&&c.g_user;
   $('g-status').innerHTML=gDa?(c.src_google==='0'?'Pausiert':'<span class="gut">Verbunden</span>'):'Nicht eingerichtet';
   $('g-detail').textContent=gDa?`${c.g_user} · ${(c.g_cals||'').split('\n').filter(Boolean).length} Kalender`:'';

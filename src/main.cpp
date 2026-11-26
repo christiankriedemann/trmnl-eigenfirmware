@@ -135,22 +135,43 @@ static void showScreenFull() {
   fullNext = true;  // das Dashboard danach wieder gruendlich
 }
 
-static bool needFull() {
-  if (fullNext) return true;
-  if (partialCount >= constrain(cfg::getInt("voll_alle", 30), 1, 1000)) return true;
+// Rundenprotokoll im RTC-Speicher (uebersteht den Tiefschlaf, nicht den Neustart): die letzten
+// Runden mit Art der Anzeige, ausgegeben frueh in der naechsten Runde und bei "status".
+RTC_DATA_ATTR static char roundLog[12][40];
+RTC_DATA_ATTR static uint8_t roundPos = 0;
+static void noteRound(const String &s) {
+  char hhmm[6] = "--:--";
+  time_t now = time(nullptr);
+  if (now > 1700000000) {
+    struct tm lt;
+    localtime_r(&now, &lt);
+    snprintf(hhmm, sizeof(hhmm), "%02d:%02d", lt.tm_hour, lt.tm_min);
+  }
+  snprintf(roundLog[roundPos % 12], sizeof(roundLog[0]), "%s %s", hhmm, s.c_str());
+  roundPos++;
+}
+static void printRounds() {
+  int n = roundPos < 12 ? roundPos : 12;
+  for (int i = 0; i < n; i++) log(String("Runde: ") + roundLog[(roundPos - n + i) % 12]);
+}
+
+static const char *needFull() {
+  if (fullNext) return "nach Neustart/Hinweis";
+  if (partialCount >= constrain(cfg::getInt("voll_alle", 30), 1, 1000)) return "Zaehler";
   time_t now = time(nullptr);
   if (now > 1700000000) {
     struct tm lt;
     localtime_r(&now, &lt);
     int32_t today = tu::localDay(now);
-    if (cfg::getInt("voll_tag", 0) != today && lt.tm_hour >= constrain(cfg::getInt("wake_h", 6), 0, 23)) return true;
+    if (cfg::getInt("voll_tag", 0) != today && lt.tm_hour >= constrain(cfg::getInt("wake_h", 6), 0, 23)) return "erstes Bild am Tag";
   }
-  return false;
+  return nullptr;
 }
 
 static void showDashboard() {
-  bool full = needFull();
-  bool partial = display::show(full);
+  const char *why = needFull();
+  bool partial = display::show(why != nullptr);
+  int32_t ch = display::lastChanged();
   if (partial) {
     partialCount++;
   } else {
@@ -158,6 +179,9 @@ static void showDashboard() {
     fullNext = false;
     if (time(nullptr) > 1700000000) cfg::setInt("voll_tag", tu::localDay(time(nullptr)));
   }
+  String pct = ch >= 0 ? String(ch * 100.0f / (CANVAS_W * CANVAS_H), 1) + "%" : String("");
+  String what = partial ? "teil " + pct : "gruendlich " + (why ? String(why) : "Flaeche " + pct);
+  noteRound(what);
   log(String(partial ? "Teilaktualisierung " : "gruendliche Aktualisierung ") + "(seit gruendlich: " + partialCount + ")");
 }
 
@@ -167,6 +191,7 @@ static void showModel(bool force) {
   memset(probe.stand, 0, sizeof(probe.stand));  // die Uhrzeit allein loest kein Neuzeichnen aus
   uint32_t h = modelHash(probe);
   if (!force && h == lastHash) {
+    noteRound("unveraendert");
     log("unveraendert, kein Neuzeichnen");
     return;
   }
@@ -405,6 +430,11 @@ static void sleepNow() {
       secs = secs - (now % secs) + 5;  // auf volle Takt-Minuten ausrichten
     }
   }
+  String si = net::syncInfo();
+  if (si.length()) {
+    log(si);
+    noteRound(si);
+  }
   log("Schlafe " + String((unsigned long)secs) + " s");
   display::sleep();
   net::off();
@@ -469,6 +499,7 @@ static bool serialSession() {
         cfg::saveWifi(tab < 0 ? rest : rest.substring(0, tab), tab < 0 ? "" : rest.substring(tab + 1));
         Serial.println("ok wlan");
       } else if (cmd == "status") {
+        printRounds();
         cfg::Wifi w[cfg::MAX_WIFI];
         int n = cfg::loadWifis(w);
         Serial.print("wlans:");
@@ -538,6 +569,8 @@ void setup() {
     settimeofday(&tv, nullptr);
   }
 
+  if (coldStart) noteRound("Neustart, Ursache " + String((int)esp_reset_reason()));
+
   // Akku fast leer: Hinweis zeigen, kein WLAN, stuendlich nachsehen, ob geladen wird
   {
     int pct = batteryPercent(batteryVoltage());
@@ -604,6 +637,7 @@ void setup() {
     sleepNow();
   }
   log("WLAN: " + ssid + ", Firmware " EIGEN_FIRMWARE_VERSION + String(ota::pendingVerify() ? " (auf Probe)" : ""));
+  printRounds();
   // Anmeldung nur nach Neustart, Tastendruck oder auf Anforderung, nicht im Takt (Strom)
   if (ms::configured() && (!ms::signedIn() || wantMsLogin) && (wantMsLogin || button || coldStart)) microsoftLogin();
   refresh(ssid);

@@ -73,21 +73,35 @@ String connect(uint32_t timeoutMs) {
   return connectOnce(timeoutMs);
 }
 
+// Zeitpunkt der letzten echten Synchronisation (uebersteht den Tiefschlaf). Gesetzt im Rueckruf,
+// damit auch eine Antwort zaehlt, die erst nach der Wartezeit waehrend der Abrufe eintrifft.
+RTC_DATA_ATTR static int64_t lastSync = 0;
+static volatile uint32_t syncMs = 0;
+static uint32_t syncStart = 0;
+
+static void onSync(struct timeval *) {
+  lastSync = time(nullptr);
+  syncMs = millis() - syncStart;
+}
+
+String syncInfo() {
+  if (!syncStart) return "";
+  return syncMs ? "NTP nach " + String(syncMs) + " ms" : "NTP ohne Antwort";
+}
+
 bool syncTime(uint32_t timeoutMs) {
   // Auf die echte Synchronisation warten, nicht nur auf "Uhr nicht mehr 1970": nach einem
   // Neustart ohne WLAN steht die Uhr auf einer Naeherung (letzte Synchronisation).
   // Die Uhr laeuft im Tiefschlaf weiter; abgleichen nach Neustart und dann alle 6 Stunden.
-  RTC_DATA_ATTR static int64_t lastSync = 0;
   time_t now = time(nullptr);
   if (lastSync > 0 && now > lastSync && now - lastSync < 6 * 3600) return true;
-  bool synced;
+  syncMs = 0;
+  syncStart = millis();
+  sntp_set_time_sync_notification_cb(onSync);
   sntp_set_sync_status(SNTP_SYNC_STATUS_RESET);
   configTime(0, 0, "pool.ntp.org", "time.google.com", "time.cloudflare.com");
-  uint32_t t0 = millis();
-  while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED && millis() - t0 < timeoutMs) delay(100);
-  synced = sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED;
-  if (synced) lastSync = time(nullptr);
-  return synced;
+  while (!syncMs && millis() - syncStart < timeoutMs) delay(100);
+  return syncMs != 0;
 }
 
 void off() {

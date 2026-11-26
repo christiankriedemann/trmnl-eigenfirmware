@@ -9,5 +9,7 @@ uint8_t *buffer();  // 48 000 Byte, Format wie Canvas
 // full = gruendliche Aktualisierung (flackert, entfernt Schlieren); sonst Teilaktualisierung
 // gegen das zuletzt gezeigte Bild. Liefert true, wenn es eine Teilaktualisierung war.
 bool show(bool full = true);
+// Geaenderte Bildpunkte der letzten Anzeige (bei gruendlich ohne Vergleich: -1)
+int32_t lastChanged();
 void sleep();
 }  // namespace display

@@ -7,6 +7,7 @@ namespace net {
 // Verbindet mit dem staerksten bekannten WLAN. Liefert die SSID oder "" bei Fehlschlag.
 String connect(uint32_t timeoutMs = 15000);
 bool syncTime(uint32_t timeoutMs = 8000);
+String syncInfo();  // Ergebnis des Zeitabgleichs dieser Runde, leer ohne Versuch
 void off();
 
 // HTTPS-Anfragen (Zertifikate aus dem eingebetteten Buendel). Antwort wird

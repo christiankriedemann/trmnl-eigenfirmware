@@ -28,7 +28,7 @@ static const char *ALLOWED[] = {"g_user", "g_cals", "g_tasks", "td_token", "td_f
                                 "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead", "q_undat",
                                 "day_min", "night_min", "wake_h", "sleep_h", "safe_bot", "show_home", "ms_client",
                                 "ms_tenant", "ms_cals", "ms_lists", "ms_planner", "src_google", "src_todoist",
-                                "ota_auto", "ms_now", "voll_alle", "ms_shared", "src_ms"};
+                                "ota_auto", "ms_now", "voll_alle", "ms_shared", "src_ms", "kuma_url"};
 // Schluessel, die das Webinterface lesen darf (keine Geheimnisse)
 static const char *READABLE[] = {"g_user", "g_email", "g_cals", "g_tasks", "td_filter", "tz_home", "loc_mode",
                                  "loc_name", "loc_lat", "loc_lon", "slots", "q_over", "q_due", "q_dead",
@@ -100,6 +100,8 @@ static void handleState() {
   s["g_key"] = cfg::has("g_key");
   s["td_token"] = cfg::has("td_token");
   s["ms_refresh"] = cfg::has("ms_refresh");
+  s["kuma_url"] = cfg::has("kuma_url");
+  d["starts"] = cfg::get("starts");
   JsonArray w = d["wifis"].to<JsonArray>();
   cfg::Wifi list[cfg::MAX_WIFI];
   int n = cfg::loadWifis(list);
@@ -119,6 +121,7 @@ static bool validValue(const char *k, const String &v) {
     long n = v.toInt();
     return n >= r.lo && n <= r.hi;
   }
+  if (!strcmp(k, "kuma_url")) return !v.length() || (v.startsWith("https://") && v.length() < 300);
   return v.length() < 3000;
 }
 

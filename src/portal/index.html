@@ -256,7 +256,11 @@ a.aufgabe{display:block;text-decoration:none;color:var(--tinte)}
       <div class="feld"><label for="voll_alle">Gr&uuml;ndlich aktualisieren nach</label>
         <p class="erkl">Normalerweise schaltet das Display nur die ge&auml;nderten Stellen um, ohne zu flackern. Nach dieser Anzahl Aktualisierungen und einmal am Morgen wird das ganze Bild gr&uuml;ndlich aufgefrischt. Siehst du Schatten alter Inhalte, stelle eine kleinere Zahl ein.</p>
         <input type="text" inputmode="numeric" id="voll_alle" style="max-width:120px" placeholder="30"></div>
-      <button class="neben" data-speichern="q_over,q_due,q_dead,q_undat,safe_bot,voll_alle">Speichern</button></details>
+      <button class="neben" data-speichern="q_over,q_due,q_dead,q_undat,safe_bot,voll_alle">Speichern</button>
+      <div class="feld"><label for="kuma_url">&Uuml;berwachung mit Uptime Kuma</label>
+        <p class="erkl">Wer einen eigenen Uptime-Kuma-Server hat: Adresse eines Push-Monitors eintragen. Das Display meldet sich dann st&uuml;ndlich mit Version, Akku und WLAN-St&auml;rke, aber ohne Termine oder Aufgaben. Leer lassen, wenn du das nicht nutzt.<span id="kuma-stand"></span></p>
+        <input type="password" id="kuma_url" autocomplete="off" spellcheck="false" placeholder="https://kuma.example.org/api/push/..."></div>
+      <button class="neben" data-speichern="kuma_url">Speichern</button></details>
   </section>
 
   <!-- Ort und Zeit -->
@@ -371,7 +375,8 @@ async function lade(){
   if(!modus){modus=(st.wifis.length&&QUELLEN.some(q=>zustand(q)!=='offen'))?'einstellungen':'assistent';zeige()}
   // Startseite
   const akku=st.akku>=0?`${st.akku} %${st.akku<=20?', bitte aufladen':''}`:'unbekannt';
-  $('statusliste').innerHTML=`<dt>Zuletzt aktualisiert</dt><dd>${esc(st.last||'noch nie')}</dd><dt>Akku</dt><dd>${esc(akku)}</dd>`;
+  $('statusliste').innerHTML=`<dt>Zuletzt aktualisiert</dt><dd>${esc(st.last||'noch nie')}</dd><dt>Akku</dt><dd>${esc(akku)}</dd>`+(st.starts?`<dt>Letzter Neustart</dt><dd>${esc(st.starts.split('\n')[0])}</dd>`:'');
+  $('kuma-stand').innerHTML=st.secrets.kuma_url?' <b class="gut">Adresse gespeichert.</b> Leer speichern entfernt sie.':'';
   $('fehlerbox').innerHTML=st.err?`<p class="hinweis"><b>Letzter Fehler:</b> ${esc(st.err)}</p>`:'';
   const offen=QUELLEN.filter(q=>zustand(q)==='aktion');
   $('aufgaben').innerHTML=(!st.wifis.length?'<a class="aufgabe" href="#wlan"><b>WLAN fehlt</b>Ohne WLAN kann das Display nichts laden. Hier einrichten.</a>':'')

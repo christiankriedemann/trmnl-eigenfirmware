@@ -9,7 +9,7 @@ namespace cfg {
 static Preferences prefs;
 static bool started = false;
 
-static const char *SECRET_KEYS[] = {"g_key", "td_token", "ms_refresh"};
+static const char *SECRET_KEYS[] = {"g_key", "td_token", "ms_refresh", "kuma_url"};
 // Grosse Werte liegen als Datei im LittleFS, das NVS (20 KB) ist dafuer zu knapp
 static const char *FILE_KEYS[] = {"g_key", "g_cals", "g_tasks", "ms_refresh", "ms_cals", "ms_lists"};
 

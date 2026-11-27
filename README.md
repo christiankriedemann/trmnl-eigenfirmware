@@ -16,6 +16,8 @@ Eigene Firmware für das **TRMNL OG** (ESP32-C3, 7,5″ E-Ink, 800 × 480, 1 Bit
 - **Akku:** Symbol ab 25 %, Hinweis „bitte aufladen“ ab 20 %, ab 5 % Ruhezustand bis zum Laden.
 - **Updates per WLAN:** einmal am Tag, nur mit gültiger Signatur, mit automatischem Rückfall auf die vorige Version.
 - **Einrichtung:** Taste 2 Sekunden halten, QR-Code scannen, Webinterface im Geräte-WLAN.
+- **Überwachung (optional):** Wer Uptime Kuma betreibt, trägt im Webinterface unter „Für Fortgeschrittene“ die Adresse eines Push-Monitors ein. Das Display meldet sich dann stündlich, beim Start und bei Fehlern mit Version, Akkuspannung, WLAN-Stärke und Neustartgrund, ohne Termine oder Aufgaben. Ist Kuma nicht erreichbar, läuft alles normal weiter.
+- **Neustarts:** Grund, letzte Runde davor und Akkuspannung stehen dauerhaft im Gerät (Webinterface und USB-Befehl `status`), auch nach leerem Akku.
 
 ## Bedienung
 

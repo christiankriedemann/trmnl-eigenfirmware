@@ -17,7 +17,8 @@ STATE = {
     "cfg": {"g_user": "name@firma.de", "g_email": "display@projekt.iam.gserviceaccount.com",
             "g_cals": "name@firma.de", "tz_home": "Europe/Berlin", "loc_mode": "auto", "day_min": "10",
             "slots": "7", "sleep_h": "23", "wake_h": "6", "safe_bot": "456", "ms_client": "abc", "ms_user": "name@firma.de", "ota_auto": "1"},
-    "secrets": {"g_key": True, "td_token": True, "ms_refresh": True},
+    "secrets": {"g_key": True, "td_token": True, "ms_refresh": True, "kuma_url": False},
+    "starts": "27.11. 11:06 Strom an (Akku war leer oder getrennt), davor zuletzt 26.11. 19:40, Akku 3.62 V",
 }
 
 
@@ -27,7 +28,8 @@ WARTET = {}  # ssid -> (Zeitpunkt, Passwort): nach 3 s verbunden, ausser Passwor
 if os.environ.get("NEU") == "1":
     STATE.update({"sta": "", "last": "", "wifis": [], "ort": ""})
     STATE["cfg"] = {"tz_home": "Europe/Berlin"}
-    STATE["secrets"] = {"g_key": False, "td_token": False, "ms_refresh": False}
+    STATE["secrets"] = {"g_key": False, "td_token": False, "ms_refresh": False, "kuma_url": False}
+    STATE["starts"] = ""
 
 
 class H(BaseHTTPRequestHandler):
@@ -84,6 +86,7 @@ class H(BaseHTTPRequestHandler):
         if p == "/api/set":
             for k, v in json.loads(body).items():
                 if k == "td_token": STATE["secrets"]["td_token"] = True; continue
+                if k == "kuma_url": STATE["secrets"]["kuma_url"] = bool(v); continue
                 STATE["cfg"][k] = v
         elif p == "/api/wifi":
             d = json.loads(body); s = d["ssid"]

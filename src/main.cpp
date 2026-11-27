@@ -155,6 +155,72 @@ static void printRounds() {
   for (int i = 0; i < n; i++) log(String("Runde: ") + roundLog[(roundPos - n + i) % 12]);
 }
 
+// ---------- Lebenszeichen ----------
+// Neustarts stehen dauerhaft im NVS ("starts", neueste zuerst), weil ein leerer Akku den
+// RTC-Speicher loescht: Grund, Zeitpunkt der letzten Runde davor und Akkuspannung beim Start.
+// "r_last" ist der Zeitpunkt der letzten vollstaendigen Runde.
+static String startInfo;  // nur in der Startrunde gesetzt, bis er gespeichert ist
+
+static const char *resetName(int r) {
+  switch (r) {
+    case ESP_RST_POWERON: return "Strom an (Akku war leer oder getrennt)";
+    case ESP_RST_SW: return "Neustart durch Firmware";
+    case ESP_RST_PANIC: return "Absturz";
+    case ESP_RST_INT_WDT:
+    case ESP_RST_TASK_WDT:
+    case ESP_RST_WDT: return "Watchdog";
+    case ESP_RST_BROWNOUT: return "Unterspannung";
+    case ESP_RST_EXT: return "Reset-Taste";
+    default: return "Reset ueber USB";
+  }
+}
+
+static void noteStart(int reason) {
+  char prev[24] = "unbekannt";
+  int32_t last = cfg::getInt("r_last", 0);
+  if (last > 1700000000) fmtStamp((time_t)last, prev, sizeof(prev));
+  startInfo = String(resetName(reason)) + ", davor zuletzt " + prev + ", Akku " + String(batteryVoltage(), 2) + " V";
+}
+
+static void recordStart() {
+  if (!startInfo.length()) return;
+  char now[24] = "--";
+  if (time(nullptr) > 1700000000) fmtStamp(time(nullptr), now, sizeof(now));
+  String all = String(now) + " " + startInfo + "\n" + cfg::get("starts");
+  int cut = -1;
+  for (int i = 0, n = 0; i < (int)all.length(); i++)
+    if (all[i] == '\n' && ++n == 5) { cut = i; break; }
+  if (cut >= 0) all = all.substring(0, cut);
+  all.trim();
+  cfg::set("starts", all);
+}
+
+// Optionale Meldung an Uptime Kuma (Push-Monitor, Adresse in "kuma_url"): beim Start, bei Fehlern
+// und sonst hoechstens stuendlich. Ohne Adresse oder ohne Antwort passiert nichts weiter.
+RTC_DATA_ATTR static int64_t lastPush = 0;
+
+static void kumaPush() {
+  String url = cfg::get("kuma_url");
+  if (!url.startsWith("https://")) return;
+  time_t now = time(nullptr);
+  bool due = startInfo.length() || lastPush == 0 || now < lastPush || now - lastPush >= (lastErr.length() ? 15 : 55) * 60;
+  if (!due) return;
+  lastPush = now;  // auch ohne Antwort: naechster Versuch erst in einer Stunde, spart Akku
+  int q = url.indexOf('?');
+  if (q >= 0) url = url.substring(0, q);
+  float v = batteryVoltage();
+  int pct = batteryPercent(v);
+  String msg = String("v" EIGEN_FIRMWARE_VERSION ", Akku ") + String(v, 2) + " V, WLAN " + String(WiFi.RSSI()) + " dBm";
+  if (startInfo.length()) msg += ", Start: " + startInfo;
+  if (lastErr.length()) msg += ", Fehler: " + lastErr.substring(0, 100);
+  // Daten aelter als eine Stunde: Monitor rot, auch wenn das Geraet selbst laeuft
+  bool fresh = raw.fetchedAt > 1700000000 && now - (time_t)raw.fetchedAt < 3600;
+  url += String("?status=") + (fresh ? "up" : "down") + "&msg=" + net::urlEncode(msg) + "&ping=" + pct;
+  JsonDocument doc;
+  int code = net::getJson(url, doc);
+  log(code == 200 && doc["ok"] == true ? String("Kuma gemeldet") : "Kuma nicht erreichbar (" + String(code) + ")");
+}
+
 static const char *needFull() {
   if (fullNext) return "nach Neustart/Hinweis";
   if (partialCount >= constrain(cfg::getInt("voll_alle", 30), 1, 1000)) return "Zaehler";
@@ -435,6 +501,8 @@ static void sleepNow() {
     log(si);
     noteRound(si);
   }
+  recordStart();
+  if (now > 1700000000) cfg::setInt("r_last", (int32_t)now);
   log("Schlafe " + String((unsigned long)secs) + " s");
   display::sleep();
   net::off();
@@ -514,6 +582,8 @@ static bool serialSession() {
         Serial.println("akku: " + String(batteryVoltage(), 2) + " V");
         Serial.println("nvs: " + cfg::nvsStats());
         Serial.println("microsoft: " + cfg::get("ms_user") + " | Fehler: " + cfg::get("ms_err"));
+        Serial.println(String("kuma: ") + (cfg::has("kuma_url") ? "ja" : "nein"));
+        Serial.println("neustarts:\n" + cfg::get("starts"));
         Serial.println("fertig");
       } else if (cmd == "wifiup" || cmd == "wifidown") {
         bool ok = cfg::moveWifi(rest, cmd == "wifiup" ? -1 : 1);
@@ -569,7 +639,10 @@ void setup() {
     settimeofday(&tv, nullptr);
   }
 
-  if (coldStart) noteRound("Neustart, Ursache " + String((int)esp_reset_reason()));
+  if (coldStart) {
+    noteRound("Neustart, Ursache " + String((int)esp_reset_reason()));
+    noteStart((int)esp_reset_reason());
+  }
 
   // Akku fast leer: Hinweis zeigen, kein WLAN, stuendlich nachsehen, ob geladen wird
   {
@@ -656,11 +729,13 @@ void setup() {
     if (u.error.length()) log("Update: " + u.error);
     if (u.installed) {
       log("Update eingespielt, Neustart");
+      recordStart();
       display::sleep();
       delay(200);
       ESP.restart();
     }
   }
+  kumaPush();
   net::off();
   buildAndShow(false, button || coldStart);
   ota::markHealthy();  // Lauf geschafft: neue Version bestaetigen
